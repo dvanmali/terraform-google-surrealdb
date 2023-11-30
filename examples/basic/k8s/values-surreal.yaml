@@ -1,0 +1,50 @@
+replicaCount: 1
+
+image:
+  repository: surrealdb/surrealdb
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+
+nameOverride: "surrealdb"
+
+args: [start]
+
+surrealdb:
+  # Datastore path
+  path: tikv://sdb-datastore-pd:2379
+  # Log configuration
+  log: info
+  # Authentication enabled
+  auth: true
+  # If you want to bootstrap the datastore with an initial user, use these values the first time you install the chart
+  # Remember to remove them after the first install, as they are no longer used:
+  initial_user: "root"
+  initial_pass: "root"
+  port: 8080
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+service:
+  type: NodePort
+  port: 8080
+  selector:
+    app: surrealdb
+  annotations:
+    # Required to connect to the NEGs resources we created previously
+    cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-neg"}}}'
+
+ingress:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi

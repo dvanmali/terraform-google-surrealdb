@@ -10,6 +10,7 @@ locals {
       proxy_subnet_ip_cidr = "10.100.0.0/23"
       node_zones = ["<REGION>-a", "<REGION>-b", "<REGION>-c" ] # Use 'gcloud compute zones list'
       master_ipv4_cidr_block = "10.0.0.0/28" # CIDR block for the cluster control plane
+      deletion_protection = true # (Optional) default is true
     }
   }
 
