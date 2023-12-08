@@ -181,15 +181,14 @@ It is recommended to change the root user of the deployment.
 ```bash
 $ gcloud compute ssh INSTANCE \
     --tunnel-through-iap \
-    --project=rev-env-01 \
-    --zone=us-central1-c \
+    --project=PROJECT_NAME \
     --ssh-flag="-ND 8888"
 ```
 
 3. In another terminal, run the following to open a browser in the VPC network then visit surrealist.app to perform admin tasks. Feel free to modify the application with your computer’s application. If you followed the instructions, the root authentication is ‘root’ for both the username and password. The url domain is the https://DNS_NAME.
 
 ```bash
-$ “/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+$ "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
     --user-data-dir="$HOME/chrome-proxy-profile" \
     --proxy-server="socks5://localhost:8888"
 ```
