@@ -1,66 +1,26 @@
-resource "google_compute_firewall" "fw_healthcheck" {
-  name          = "fw-allow-healthcheck"
-  direction     = "INGRESS"
-  network       = data.google_compute_network.vpc.id
-  source_ranges = ["130.211.0.0/22", "35.191.0.0/16"]
-  # target_tags = ["load-balanced-backend"]
-  allow {
-    protocol = "tcp"
-    ports    = ["8080", "443"]
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+    }
   }
 }
 
-resource "google_compute_firewall" "fw_backends" {
-  name          = "surrealdb-fw-allow-backends"
-  direction     = "INGRESS"
-  network       = data.google_compute_network.vpc.id
-  source_ranges = ["10.100.0.0/23"]
-  # target_tags = ["load-balanced-backend"]
-  allow {
-    protocol = "tcp"
-    ports    = ["8080", "443"]
-  }
-}
-
-# resource "google_compute_health_check" "https-health-check" {
-#   name = "surrealdb-https-health-check"
-  
-#   timeout_sec         = 1
-#   check_interval_sec  = 1
-#   healthy_threshold   = 1
-#   unhealthy_threshold = 2
-
-#   https_health_check {
-#     port = "443"
-#   }
-# }
-
-resource "google_compute_health_check" "http-health-check" {
-  name = "surrealdb-http-health-check"
-  
-  timeout_sec         = 1
-  check_interval_sec  = 1
-  healthy_threshold   = 1
-  unhealthy_threshold = 2
-
-  http_health_check {
-    request_path = "/health"
-    port = "8080"
-  }
+data "google_compute_network" "vpc" {
+  name = var.vpc
+  # auto_create_subnetworks = var.vpc_auto_create_subnetworks
 }
 
 ### BACKEND
 
 # Need 1 that points to all its NEGs
 resource "google_compute_backend_service" "default" {
-  for_each = module.gke_clusters
+  for_each = var.gke_clusters
 
   name                  = "surrealdb-backend-service"
   protocol              = "HTTP"
   load_balancing_scheme = "INTERNAL_MANAGED"
-  health_checks         = [
-    google_compute_health_check.http-health-check.id
-  ]
+  health_checks         = var.health_checks
 
   dynamic backend {
     for_each = each.value.neg
@@ -101,6 +61,7 @@ resource "google_dns_managed_zone" "private" {
   }
 }
 
+# DNS Authorization for the SSL Certificate
 resource "google_certificate_manager_dns_authorization" "default" {
   name        = "surrealdb-dns-authorization"
   description = "DNS authorization for surrealdb"
@@ -116,6 +77,7 @@ resource "google_dns_record_set" "cname" {
   rrdatas      = [google_certificate_manager_dns_authorization.default.dns_resource_record.0.data]
 }
 
+# Managed SSL Certificate
 resource "google_certificate_manager_certificate" "db_cert" {
   name        = "surrealdb-gilb-cert"
   description = "SurrealDB managed cert"
@@ -131,6 +93,7 @@ resource "google_certificate_manager_certificate" "db_cert" {
   }
 }
 
+# Maps the certificate on the proxy
 resource "google_compute_target_https_proxy" "default" {
   name         = "surrealdb-global-https-proxy"
   url_map      = google_compute_url_map.default.id
@@ -139,10 +102,10 @@ resource "google_compute_target_https_proxy" "default" {
   ]
 }
 
-### Regional Cluster Static IPs
+### DNS and Global Forwarding
 
 resource "google_compute_address" "regional-frontend" {
-  for_each     = module.gke_clusters
+  for_each     = var.gke_clusters
 
   name         = "surrealdb-${each.key}-ip"
   address_type = "INTERNAL"

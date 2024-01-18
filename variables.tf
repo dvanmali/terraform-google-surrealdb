@@ -8,6 +8,18 @@ variable "vpc" {
   description = "VPC deployment network name"
 }
 
+variable "enable_external_global_lb" {
+  type = bool
+  description = "Enable an externally accessible global load balancer"
+  default = false
+}
+
+variable "enable_internal_cross_regional_lb" {
+  type = bool
+  description = "Enable a cross-regional internal load balancer"
+  default = true
+}
+
 variable "vpc_auto_create_subnetworks" {
   type = bool
   description = "VPC deployment network name"

@@ -20,7 +20,7 @@ resource "google_compute_instance" "jump_host" {
     provisioning_model = "SPOT"
     preemptible = true # Required if spot
     automatic_restart = false # Required if spot
-    instance_termination_action = "DELETE"
+    instance_termination_action = "STOP"
   }
   network_interface {
     network = var.vpc

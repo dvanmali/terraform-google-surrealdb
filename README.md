@@ -205,9 +205,21 @@ $ terraform destroy
 
 # Definitions
 
-### Cross-Regional Load Balancer
+### Internal Cross-Regional Load Balancer
 
-A private DNS "geo-routes" to the nearest available frontend. Then, the cross regional load balancer forwards traffic to a SurrealDB service in that region.
+A private DNS "geo-routes" to the nearest available frontend. Then, the cross-regional load balancer forwards traffic to a SurrealDB service in that region. "Internal" means the load balancer frontend endpoint is available on your VPC. To enable, set the following to true (default: true):
+
+```ts
+enable_internal_cross_regional_lb = true
+```
+
+### External Global Load Balancer
+
+A global load balancer forwards internet traffic to the nearest available frontend from one of many Google's point of entry site. "External" means the frontend faces the internet and is available both the public internet and your private VPC through the public internet. To enable, set the following to true (default: false):
+
+```ts
+enable_external_global_lb = true
+```
 
 ### GKE
 

@@ -2,6 +2,9 @@ locals {
   project_id="<PROJECT_ID>"
   vpc="<VPC_NAME>"
 
+  enable_external_global_lb = false
+  enable_internal_cross_regional_lb = true
+
   # NOTE: All CIDR ranges can be changed, they are only provided as Quickstart
   gke_clusters = {
     "<REGION>-1" = {
@@ -31,12 +34,15 @@ provider "google" {
 
 module "gke-surrealdb" {
   source = "dvanmali/surrealdb/google"
-  version = "1.0.0"
+  version = "1.1.0"
 
   project_id = local.project_id
   vpc = local.vpc
   gke_clusters = local.gke_clusters
   jump_host_iap = local.jump_host_iap
+
+  enable_external_global_lb = local.enable_external_global_lb
+  enable_internal_cross_regional_lb = local.enable_internal_cross_regional_lb
 
   providers = {
     google = google
