@@ -32,9 +32,9 @@ If you don’t already have a VPC set up, run the following to create a VPC. Fee
 
 ```bash
 # IPv4 only auto-mode
-$ gcloud compute networks create VPC_NAME --subnet-mode=auto
-# OR IPv4 and IPv6 dual-stack custom-mode
-$ gcloud compute networks create VPC_NAME --subnet-mode=custom --enable-ula-internal-ipv6
+$ gcloud compute networks create $VPC_NAME --subnet-mode=auto
+# OR IPv4 and IPv6 dual-stack custom-mode (recommended)
+$ gcloud compute networks create $VPC_NAME --subnet-mode=custom --enable-ula-internal-ipv6
 ```
 
 ## Basic Setup
@@ -53,13 +53,15 @@ $ terraform plan
 $ terraform apply
 ```
 
-## Deploy SurrealDB
+## Setup Jump Host
+
+To reach our private GKE control plane, we install tiny proxy which proxies our aliased kubctl and helm commands.
 
 1. For all the SurrealDB jump host instances, deploy tiny proxy
 ```bash
 $ gcloud compute instances list
-# INSTANCE = one of the compute instances listed
-$ gcloud compute ssh INSTANCE --tunnel-through-iap
+# $INSTANCE = one of the compute instances listed
+$ gcloud compute ssh $INSTANCE --tunnel-through-iap
 $ sudo apt install tinyproxy
 $ sudo vi /etc/tinyproxy/tinyproxy.conf
 # Add localhost to the Allow section using ‘i’ and ‘:wq’ to exit
@@ -70,14 +72,13 @@ $ exit
 2. Get cluster credentials
 ```bash
 $ gcloud container clusters list
-$ gcloud container clusters get-credentials CLUSTER \
+$ gcloud container clusters get-credentials $CLUSTER \
   --location LOCATION
 ```
 
 3. Connect to the server in the background.
 ```bash
-$ gcloud compute ssh $INSTANCE \
-  --tunnel-through-iap \
+$ gcloud compute ssh $INSTANCE --tunnel-through-iap \
   --ssh-flag="-4 -L8888:localhost:8888 -N -q"
 ```
 
@@ -102,7 +103,7 @@ kube-system                Active   8m
 
 1. Install CRDS
 ```bash
-$ k create -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.5.1/manifests/crd.yaml
+$ k create -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/crd.yaml
 ```
 
 2. Install TiDB Operator Helm chart:
@@ -114,7 +115,7 @@ $ h install \
 	--create-namespace \
 	tidb-operator \
 	pingcap/tidb-operator \
-	--version v1.5.1
+	--version v1.6.0
 ```
 
 3. Verify that the Pods are running
@@ -179,9 +180,8 @@ It is recommended to change the root user of the deployment.
 
 2. Open a connection to the frontend to connect to the admin portal in the VPC. Note these flags are different because routes are dynamic instead of targeting the localhost.
 ```bash
-$ gcloud compute ssh INSTANCE \
+$ gcloud compute ssh $INSTANCE \
     --tunnel-through-iap \
-    --project=PROJECT_NAME \
     --ssh-flag="-ND 8888"
 ```
 
