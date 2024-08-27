@@ -82,7 +82,7 @@ variable "jump_host_machine" {
 variable "jump_host_os" {
   type = string
   description = "Jump Host Machine Operating system imaged"
-  default = "debian-cloud/debian-12-bookworm-v20240701"
+  default = "debian-cloud/debian-12-bookworm-v20240709"
 }
 
 variable "jump_host_service_account_email" {
