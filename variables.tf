@@ -70,6 +70,8 @@ variable "gke_clusters" {
     master_ipv4_cidr_block = string
     jump_host_ip = optional(string)
     deletion_protection = optional(bool)
+    enable_autopilot = optional(bool)
+    cluster_service_account_email = optional(string)
   }))
   description = "Map of all clusters to deploy"
 }

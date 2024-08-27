@@ -18,6 +18,8 @@ module "gke_clusters" {
   node_zones = each.value.node_zones
   master_ipv4_cidr_block = each.value.master_ipv4_cidr_block
   deletion_protection = each.value.deletion_protection
+  enable_autopilot = each.value.enable_autopilot
+  cluster_service_account_email = each.value.cluster_service_account_email
 
   jump_host_ip = each.value.jump_host_ip
   jump_host_zone = each.value.jump_host_zone

@@ -35,12 +35,18 @@ resource "google_container_cluster" "surreal" {
 
   node_locations = var.node_zones
 
-  enable_autopilot = true
+  enable_autopilot = var.enable_autopilot
 
   private_cluster_config {
     enable_private_nodes    = true
     enable_private_endpoint = true
     master_ipv4_cidr_block  = var.master_ipv4_cidr_block
+  }
+
+  cluster_autoscaling {
+    auto_provisioning_defaults {
+      service_account = var.cluster_service_account_email
+    }
   }
 
   master_authorized_networks_config {}

@@ -37,6 +37,14 @@ $ gcloud compute networks create $VPC_NAME --subnet-mode=auto
 $ gcloud compute networks create $VPC_NAME --subnet-mode=custom --enable-ula-internal-ipv6
 ```
 
+## IAM
+
+(recommended) If you wish to setup a default service account for the cluster instead of using the default compute class, please create a new service account within IAM with the following minimum roles. Add this email to every gke_cluster configuration under cluster_service_account_email. Note that this email is immutable once the cluster is created.
+
+- Kubernetes Engine Default Node Service Account
+- Monitoring Viewer
+- Workload Identity User
+
 ## Basic Setup
 
 See [examples](./examples/) for example configurations. The following follows the [basic setup](./examples/basic/).
@@ -237,6 +245,10 @@ See [Contribution Guidelines](./)
 
 ## License
 [Apache 2.0](./LICENSE)
+
+## Breaking Changes
+- 1.1.1 -> 1.2.x
+	- Enabling autopilot on the cluster is no longer the default. To keep the previous functionality, add enable_autopilot to each created cluster manually by setting the value to true.
 
 ## Closing
 

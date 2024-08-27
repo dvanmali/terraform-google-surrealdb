@@ -52,6 +52,20 @@ variable "master_ipv4_cidr_block" {
   default = "10.0.0.0/28" # 16 IP Addresses (Reserves 10.0.0.0-10.0.0.15)
 }
 
+variable "cluster_service_account_email" {
+  type = string
+  nullable = true
+  description = "Service Account to be used by the node VMs. If not supplied, cluster uses the default compute engine service account."
+  default = null
+}
+
+variable "enable_autopilot" {
+  type = bool
+  nullable = true
+  description = "Enable autopilot. Default Standard cluster."
+  default = null
+}
+
 variable "jump_host_ip" {
   type = string
   nullable = true

@@ -14,12 +14,14 @@ locals {
       node_zones = ["<REGION>-a", "<REGION>-b", "<REGION>-c" ] # Use 'gcloud compute zones list'
       master_ipv4_cidr_block = "10.0.0.0/28" # CIDR block for the cluster control plane
       deletion_protection = true # (Optional) default is true
+      enable_autopilot = true
+      # cluster_service_account_email = "" (Recommended) this value should be filled out before cluster creation
     }
   }
 
   jump_host_iap = {
     "me" = {
-      members=["projectOwner:<PROJECT_ID>"]
+      members=["user:<email>"]
       # condition={
       #   title="Day access"
       #   expression="request.time < timestamp('2023-11-20T00:00:00.000Z')"
