@@ -66,6 +66,13 @@ variable "enable_autopilot" {
   default = null
 }
 
+variable "enable_backup" {
+  type = bool
+  nullable = false
+  description = "Enable backup api for this cluster. A backup plan will still need to be created."
+  default = false
+}
+
 variable "jump_host_ip" {
   type = string
   nullable = true
@@ -82,7 +89,7 @@ variable "jump_host_machine" {
 variable "jump_host_os" {
   type = string
   description = "Jump Host Machine Operating system imaged"
-  default = "debian-cloud/debian-12-bookworm-v20240815"
+  default = "debian-cloud/debian-12-bookworm-v20241210"
 }
 
 variable "jump_host_service_account_email" {

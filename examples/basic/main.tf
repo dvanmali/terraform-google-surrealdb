@@ -15,7 +15,8 @@ locals {
       master_ipv4_cidr_block = "10.0.0.0/28" # CIDR block for the cluster control plane
       deletion_protection = true # (Optional) default is true
       enable_autopilot = true
-      # cluster_service_account_email = "" (Recommended) this value should be filled out before cluster creation
+      enable_backup = true # (Recommended)
+      # cluster_service_account_email = "" # (Recommended) this value should be filled out before cluster creation
     }
   }
 
@@ -36,7 +37,7 @@ provider "google" {
 
 module "gke-surrealdb" {
   source = "dvanmali/surrealdb/google"
-  version = "1.2.0"
+  version = "1.2.1"
 
   project_id = local.project_id
   vpc = local.vpc

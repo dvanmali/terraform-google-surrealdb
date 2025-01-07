@@ -49,6 +49,12 @@ resource "google_container_cluster" "surreal" {
     }
   }
 
+  addons_config {
+    gke_backup_agent_config {
+      enabled = var.enable_backup
+    }
+  }
+
   master_authorized_networks_config {}
 }
 

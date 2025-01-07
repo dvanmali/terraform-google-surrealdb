@@ -19,6 +19,7 @@ module "gke_clusters" {
   master_ipv4_cidr_block = each.value.master_ipv4_cidr_block
   deletion_protection = each.value.deletion_protection
   enable_autopilot = each.value.enable_autopilot
+  enable_backup = each.value.enable_backup
   cluster_service_account_email = each.value.cluster_service_account_email
 
   jump_host_ip = each.value.jump_host_ip

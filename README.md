@@ -81,7 +81,7 @@ $ exit
 ```bash
 $ gcloud container clusters list
 $ gcloud container clusters get-credentials $CLUSTER \
-  --location LOCATION
+  --location $LOCATION
 ```
 
 3. Connect to the server in the background.
