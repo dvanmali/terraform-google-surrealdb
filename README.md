@@ -111,7 +111,7 @@ kube-system                Active   8m
 
 1. Install CRDS
 ```bash
-$ k create -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.0/manifests/crd.yaml
+$ k create -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.1/manifests/crd.yaml
 ```
 
 2. Install TiDB Operator Helm chart:
@@ -123,7 +123,7 @@ $ h install \
 	--create-namespace \
 	tidb-operator \
 	pingcap/tidb-operator \
-	--version v1.6.0
+	--version v1.6.1
 ```
 
 3. Verify that the Pods are running
@@ -150,13 +150,13 @@ $ k apply -f tikv-cluster.yaml -n surreal-cluster
 ```bash
 $ k get tidbcluster -n surreal-cluster
 NAME             READY   PD                  STORAGE   READY   DESIRE   
-sdb-datastore    True    pingcap/pd:v7.1.1   10Gi      3       3        
+sdb-datastore    True    pingcap/pd:v8.5.0   10Gi      3       3        
 
 TIKV                  STORAGE   READY   DESIRE   
-pingcap/tikv:v7.1.1   10Gi      3       3        
+pingcap/tikv:v8.5.0   10Gi      3       3        
 
 TIDB                  READY   DESIRE   AGE
-pingcap/tidb:v7.1.1           0        9m
+pingcap/tidb:v8.5.0           0        9m
 ```
 
 ## Deploy SurrealDB
