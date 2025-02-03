@@ -73,6 +73,13 @@ variable "enable_backup" {
   default = false
 }
 
+variable "daily_maintenance_start_time" {
+  type = string
+  nullable = false
+  default = "00:00"
+  description = "Daily maintence window start time. Default midnight."
+}
+
 variable "jump_host_ip" {
   type = string
   nullable = true
@@ -89,7 +96,7 @@ variable "jump_host_machine" {
 variable "jump_host_os" {
   type = string
   description = "Jump Host Machine Operating system imaged"
-  default = "debian-cloud/debian-12-bookworm-v20241210"
+  default = "debian-cloud/debian-12-bookworm-v20250113"
 }
 
 variable "jump_host_service_account_email" {

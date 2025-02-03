@@ -72,6 +72,7 @@ variable "gke_clusters" {
     deletion_protection = optional(bool)
     enable_autopilot = optional(bool)
     enable_backup = optional(bool) # Recommended in prod
+    daily_maintenance_policy = optional(string) # defaults midnight
     cluster_service_account_email = optional(string)
   }))
   description = "Map of all clusters to deploy"
@@ -86,5 +87,5 @@ variable "jump_host_machine" {
 variable "jump_host_os" {
   type = string
   description = "Jump Host Machine Operating system imaged"
-  default = "debian-cloud/debian-12-bookworm-v20241210"
+  default = "debian-cloud/debian-12-bookworm-v20250113"
 }

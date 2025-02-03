@@ -56,6 +56,13 @@ resource "google_container_cluster" "surreal" {
   }
 
   master_authorized_networks_config {}
+
+
+  maintenance_policy {
+    daily_maintenance_window {
+      start_time = var.daily_maintenance_start_time
+    }
+  }
 }
 
 # Multiple NEGs for each zone in the cluster
