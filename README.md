@@ -51,14 +51,21 @@ See [examples](./examples/) for example configurations. The following follows th
 
 1. Copy the [main.tf](./examples/basic/main.tf) to your own `main.tf` file. Remember, to replace the local values with your own variable values. Specifically, replace "\<PROJECT_ID\>", "\<VPC_NAME\>" and "\<REGION\>".
 
-2. Plan the deployment to check for errors in setup before applying. The deployment deploys all of following components: an internal cross-regional load balancer for enabling internal access for clients, a Google-Managed SSL certificate for secure connectivity, a jump-host VM to access the GKE control plane for each cluster using Google’s IAP, and NAT for cluster internet connectivity.
+2. Initialize the provider plugins, format the configuration, and validate it locally.
 ```bash
-$ terraform plan
+$ terraform init
+$ terraform fmt -check -recursive
+$ terraform validate
 ```
 
-3. When satisfied, apply the values.
+3. Plan the deployment to check for setup errors before applying. Save the reviewed plan so the apply operation uses exactly those changes. The deployment includes an internal cross-regional load balancer for client access, a Google-managed SSL certificate, an IAP jump-host VM for each GKE cluster, and NAT for cluster internet connectivity.
 ```bash
-$ terraform apply
+$ terraform plan -out=tfplan
+```
+
+4. When satisfied, apply the reviewed plan.
+```bash
+$ terraform apply tfplan
 ```
 
 ## Setup Jump Host

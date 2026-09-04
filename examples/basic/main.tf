@@ -16,6 +16,7 @@ locals {
       deletion_protection = true # (Optional) default is true
       enable_autopilot = true
       enable_backup = true # (Recommended)
+      daily_maintenance_start_time = "00:00"
       # cluster_service_account_email = "" # (Recommended) this value should be filled out before cluster creation
     }
   }

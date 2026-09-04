@@ -14,12 +14,18 @@ module "gke_clusters" {
   vpc = data.google_compute_network.vpc.id
   vpc_subnet = "surrealdb"
   vpc_subnet_ip = each.value.vpc_subnet_ip # 256 IP addresses (Reserves 10.1.0.0-10.1.0.255)
+  proxy_subnet_ip_cidr = each.value.proxy_subnet_ip_cidr
   region = each.value.region
   node_zones = each.value.node_zones
   master_ipv4_cidr_block = each.value.master_ipv4_cidr_block
   deletion_protection = each.value.deletion_protection
   enable_autopilot = each.value.enable_autopilot
   enable_backup = each.value.enable_backup
+  daily_maintenance_start_time = coalesce(
+    each.value.daily_maintenance_start_time,
+    each.value.daily_maintenance_policy,
+    "00:00",
+  )
   cluster_service_account_email = each.value.cluster_service_account_email
 
   jump_host_ip = each.value.jump_host_ip
