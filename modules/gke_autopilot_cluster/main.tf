@@ -69,7 +69,7 @@ resource "google_container_cluster" "surreal" {
 resource "google_compute_network_endpoint_group" "neg" {
   for_each = google_container_cluster.surreal.node_locations
 
-  name         = "surrealdb-neg"
+  name         = "surrealdb-${var.key}-neg"
   description  = "SurrealDB Zonal NEG"
   network      = var.vpc
   default_port = 8080

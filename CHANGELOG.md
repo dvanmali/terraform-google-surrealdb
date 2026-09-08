@@ -11,6 +11,7 @@ All notable changes to this project are documented here.
 - Consolidated each load balancer's backend service into a single resource aggregating all cluster NEGs, fixing name collisions and unreliable backend selection across multiple clusters.
 - Derived firewall `source_ranges` for backend traffic from each cluster's `proxy_subnet_ip_cidr` instead of a hard-coded CIDR.
 - Scoped each cluster's subnet name with its key to prevent collisions when multiple clusters share a region.
+- Scoped each cluster's zonal NEG name with its key to prevent collisions in multi-cluster deployments.
 - Wired `max_rate_per_endpoint` through to both load balancer modules.
 - Removed the unused `vpc_auto_create_subnetworks` reference.
 
