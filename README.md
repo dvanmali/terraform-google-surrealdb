@@ -253,10 +253,6 @@ See [Contribution Guidelines](./)
 ## License
 [Apache 2.0](./LICENSE)
 
-## Breaking Changes
-- 1.1.1 -> 1.2.x
-	- Enabling autopilot on the cluster is no longer the default. To keep the previous functionality, add enable_autopilot to each created cluster manually by setting the value to true.
-
 ## Closing
 
 This setup took many hours of development, so if you found this following repository helpful or if you used this in your deployment, please give us star :star:
