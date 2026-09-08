@@ -38,8 +38,8 @@ service:
   selector:
     app: surrealdb
   annotations:
-    # Required to connect to the NEGs resources we created previously
-    cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-neg"}}}'
+    # Required to connect to the NEGs resources we created previously ("surrealdb-<CLUSTER_NAME>-neg")
+    cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-<REGION>-1-neg"}}}'
 
 ingress:
   enabled: false

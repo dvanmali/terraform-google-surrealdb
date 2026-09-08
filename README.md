@@ -190,7 +190,7 @@ NAME               TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
 sdb-datastore-pd   ClusterIP   x.x.x.x        <none>        2379/TCP   10m
 ```
 
-2. Copy [values-surreal.yaml](./examples/basic/k8s/values-surreal.yaml) locally.
+2. Copy [values-surreal.yaml](./examples/basic/k8s/values-surreal.yaml) locally. Remember to change the cloud.google.com/neg value to reflect the cluster name (for the example simply replace "\<REGION\>").
 
 3. Upload the installation
 ```bash
