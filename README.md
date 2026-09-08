@@ -1,6 +1,18 @@
 # SurrealDB Terraform Deployment
 
-The deployment deploys all of following components: an internal cross-regional load balancer for enabling internal access for clients, a Google-Managed SSL certificate for secure connectivity, a jump-host VM to access the GKE control plane for each cluster using Google’s IAP, and NAT for cluster internet connectivity.
+A multi-node SurrealDB Kubernetes deployment on Google Kubernetes Engine served on a HTTPS endpoint.
+
+**Configuration Options:**
+- Single cluster or multi cluster
+- Traditional GKE or GKE Autopilot per cluster
+- Internal and/or External Load Balancing
+- IAP member security rules
+
+**Key Components:**
+- Internal cross-regional load balancer for enabling internal access for clients
+- Google-Managed SSL certificate for secure connectivity
+- Jump-host VM to access the GKE control plane for each cluster using Google’s IAP
+- NAT for cluster internet connectivity.
 
 # Deployment Instructions
 
