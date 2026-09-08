@@ -14,6 +14,6 @@ output "region" {
 }
 
 output "neg" {
-  value = google_compute_network_endpoint_group.neg
+  value       = google_compute_network_endpoint_group.neg
   description = "Zone locations where the cluster exists"
 }

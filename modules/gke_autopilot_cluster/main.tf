@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     google = {
-      source  = "hashicorp/google"
+      source = "hashicorp/google"
     }
   }
 }
@@ -26,8 +26,8 @@ resource "google_compute_subnetwork" "proxy_subnet" {
 
 # SurrealDB Private Regional Cluster
 resource "google_container_cluster" "surreal" {
-  name     = "surrealdb-${var.key}"
-  location = google_compute_subnetwork.subnet.region
+  name                = "surrealdb-${var.key}"
+  location            = google_compute_subnetwork.subnet.region
   deletion_protection = var.deletion_protection
 
   network    = var.vpc
@@ -74,6 +74,6 @@ resource "google_compute_network_endpoint_group" "neg" {
   network      = var.vpc
   default_port = 8080
 
-  subnetwork   = google_compute_subnetwork.subnet.name
-  zone         = each.value
+  subnetwork = google_compute_subnetwork.subnet.name
+  zone       = each.value
 }

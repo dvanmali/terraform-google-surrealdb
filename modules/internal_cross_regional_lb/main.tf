@@ -1,32 +1,33 @@
 terraform {
   required_providers {
     google = {
-      source  = "hashicorp/google"
+      source = "hashicorp/google"
     }
   }
 }
 
 data "google_compute_network" "vpc" {
   name = var.vpc
-  # auto_create_subnetworks = var.vpc_auto_create_subnetworks
 }
 
 ### BACKEND
 
-# Need 1 that points to all its NEGs
+# One backend service aggregates the zonal NEGs from every cluster.
 resource "google_compute_backend_service" "default" {
-  for_each = var.gke_clusters
-
   name                  = "surrealdb-backend-service"
   protocol              = "HTTP"
   load_balancing_scheme = "INTERNAL_MANAGED"
   health_checks         = var.health_checks
 
-  dynamic backend {
-    for_each = each.value.neg
+  dynamic "backend" {
+    for_each = {
+      for neg in flatten([
+        for cluster in values(var.gke_clusters) : cluster.neg
+      ]) : neg.id => neg
+    }
     content {
-      group = backend.value.id
-      balancing_mode = "RATE"
+      group                 = backend.value.id
+      balancing_mode        = "RATE"
       max_rate_per_endpoint = var.max_rate_per_endpoint # Target average HTTP request rate for a single endpoint
     }
   }
@@ -35,17 +36,14 @@ resource "google_compute_backend_service" "default" {
 # Need 1 that points to the backend service
 resource "google_compute_url_map" "default" {
   name            = "surrealdb-url-map"
-  default_service = "surrealdb-backend-service"
-  depends_on = [
-    google_compute_backend_service.default
-  ]
+  default_service = google_compute_backend_service.default.id
 }
 
 ### HTTPS FRONTEND
 
 # Public DNS zone used for issuing SSL Certificates
 data "google_dns_managed_zone" "public" {
-  name        = var.dns_public
+  name = var.dns_public
 }
 
 # Private DNS zone stores internal IP addresses
@@ -53,7 +51,7 @@ resource "google_dns_managed_zone" "private" {
   name        = var.dns_private == null ? "${data.google_dns_managed_zone.public.name}-private" : var.dns_private
   dns_name    = data.google_dns_managed_zone.public.dns_name
   description = "Private DNS zone for ${data.google_dns_managed_zone.public.dns_name} to route internal endpoints."
-  visibility = "private"
+  visibility  = "private"
   private_visibility_config {
     networks {
       network_url = data.google_compute_network.vpc.id
@@ -95,8 +93,8 @@ resource "google_certificate_manager_certificate" "db_cert" {
 
 # Maps the certificate on the proxy
 resource "google_compute_target_https_proxy" "default" {
-  name         = "surrealdb-global-https-proxy"
-  url_map      = google_compute_url_map.default.id
+  name    = "surrealdb-global-https-proxy"
+  url_map = google_compute_url_map.default.id
   certificate_manager_certificates = [
     google_certificate_manager_certificate.db_cert.id
   ]
@@ -105,7 +103,7 @@ resource "google_compute_target_https_proxy" "default" {
 ### DNS and Global Forwarding
 
 resource "google_compute_address" "regional-frontend" {
-  for_each     = var.gke_clusters
+  for_each = var.gke_clusters
 
   name         = "surrealdb-${each.key}-ip"
   address_type = "INTERNAL"
@@ -115,16 +113,16 @@ resource "google_compute_address" "regional-frontend" {
 }
 
 resource "google_compute_global_forwarding_rule" "gil7_forwarding_rule" {
-  for_each     = google_compute_address.regional-frontend
+  for_each = google_compute_address.regional-frontend
 
-  name        = format("surrealdb-gil7-to-%s", trimprefix(each.value.name, "surrealdb-"))
+  name                  = format("surrealdb-gil7-to-%s", trimprefix(each.value.name, "surrealdb-"))
   load_balancing_scheme = "INTERNAL_MANAGED"
-  network     = data.google_compute_network.vpc.id
-  subnetwork  = each.value.subnetwork
-  target      = google_compute_target_https_proxy.default.id
-  ip_protocol = "TCP"
-  ip_address  = each.value.address
-  port_range  = 443
+  network               = data.google_compute_network.vpc.id
+  subnetwork            = each.value.subnetwork
+  target                = google_compute_target_https_proxy.default.id
+  ip_protocol           = "TCP"
+  ip_address            = each.value.address
+  port_range            = 443
 }
 
 resource "google_dns_record_set" "geo_route" {
@@ -138,7 +136,7 @@ resource "google_dns_record_set" "geo_route" {
   routing_policy {
     geo {
       location = each.value.region
-      rrdatas  = [ each.value.address ]
+      rrdatas  = [each.value.address]
     }
   }
 }

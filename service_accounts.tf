@@ -17,15 +17,15 @@ resource "google_compute_firewall" "iap_jump_host_rules" {
   # Enables IAP Access to the SSH port for VMs using the jump host service account
   allow {
     protocol = "tcp"
-    ports    = [ "22" ]
+    ports    = ["22"]
   }
-  target_service_accounts = [ google_service_account.jump_host.email ]
-  source_ranges = [ "35.235.240.0/20" ]
+  target_service_accounts = [google_service_account.jump_host.email]
+  source_ranges           = ["35.235.240.0/20"]
 }
 
 resource "google_iap_tunnel_iam_binding" "jump_host_tunnel" {
   for_each = var.jump_host_iap
-  role    = "roles/iap.tunnelResourceAccessor"
+  role     = "roles/iap.tunnelResourceAccessor"
   members = each.value.members != null ? each.value.members : [
     "projectOwner:${var.project_id}"
   ]

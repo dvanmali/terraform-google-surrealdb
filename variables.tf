@@ -1,92 +1,105 @@
 variable "project_id" {
-  type = string
+  type        = string
   description = "Project where resources are constructed"
 }
 
 variable "vpc" {
-  type = string
+  type        = string
   description = "VPC deployment network name"
 }
 
 variable "enable_external_global_lb" {
-  type = bool
+  type        = bool
   description = "Enable an externally accessible global load balancer"
-  default = false
+  default     = false
 }
 
 variable "enable_internal_cross_regional_lb" {
-  type = bool
+  type        = bool
   description = "Enable a cross-regional internal load balancer"
-  default = true
-}
-
-variable "vpc_auto_create_subnetworks" {
-  type = bool
-  description = "VPC deployment network name"
-  default = true # An auto-VPC network can be converted into custom networks but not vice-versa
+  default     = true
 }
 
 variable "dns_public" {
-  type = string
+  type        = string
   description = "Name for the existing public DNS zone"
-  default = "surrealdb"
+  default     = "surrealdb"
 }
 
 variable "dns_private" {
-  type = string
+  type        = string
   description = "(Optional) Name for the private DNS zone to be created"
-  nullable = true
-  default = null
+  nullable    = true
+  default     = null
 }
 
 variable "max_rate_per_endpoint" {
-  type = number
+  type        = number
   description = "Number of requests per second for each endpoint connected to the loadbalancer"
-  default = 1000000000 # A single Surrealdb can handle millions of connections because each connection is concurrent
+  default     = 1000000000 # A single Surrealdb can handle millions of connections because each connection is concurrent
+  validation {
+    condition     = var.max_rate_per_endpoint > 0
+    error_message = "max_rate_per_endpoint must be greater than zero."
+  }
 }
 
 variable "jump_host_iap" {
   type = map(object({
     members = optional(set(string))
     condition = optional(object({
-      title = string
+      title       = string
       description = optional(string)
-      expression = string
+      expression  = string
     }))
   }))
   description = "Map of members allowed to use the IAP Tunnel. Key is unused but must be unique. (default: project owner). See https://registry.terraform.io/providers/hashicorp/google-beta/latest/docs/resources/iap_tunnel_iam#member/members for potential values."
   default = {
-    "projectOwner": {}
+    "projectOwner" : {}
   }
 }
 
 variable "gke_clusters" {
   type = map(object({
-    region = string
-    vpc_subnet_ip = string # 256 IP addresses (Reserves 10.1.0.0-10.1.0.255)
-    proxy_subnet_ip_cidr = string # /23 CIDR Recommended
-    jump_host_zone = optional(string, "a")
-    node_zones = set(string)
-    master_ipv4_cidr_block = string
-    jump_host_ip = optional(string)
-    deletion_protection = optional(bool)
-    enable_autopilot = optional(bool)
-    enable_backup = optional(bool) # Recommended in prod
-    daily_maintenance_start_time = optional(string) # Defaults to midnight (HH:MM)
-    daily_maintenance_policy = optional(string) # Deprecated alias for daily_maintenance_start_time
+    region                        = string
+    vpc_subnet_ip                 = string # 256 IP addresses (Reserves 10.1.0.0-10.1.0.255)
+    proxy_subnet_ip_cidr          = string # /23 CIDR Recommended
+    jump_host_zone                = optional(string, "a")
+    node_zones                    = set(string)
+    master_ipv4_cidr_block        = string
+    jump_host_ip                  = optional(string)
+    deletion_protection           = optional(bool, true)
+    enable_autopilot              = optional(bool, false)
+    enable_backup                 = optional(bool, false) # Recommended in prod
+    daily_maintenance_start_time  = optional(string)      # Defaults to midnight (HH:MM)
+    daily_maintenance_policy      = optional(string)      # Deprecated alias for daily_maintenance_start_time
     cluster_service_account_email = optional(string)
   }))
   description = "Map of all clusters to deploy"
+  validation {
+    condition = alltrue(flatten([
+      for cluster in values(var.gke_clusters) : [
+        can(cidrhost(cluster.vpc_subnet_ip, 0)),
+        can(cidrhost(cluster.proxy_subnet_ip_cidr, 0)),
+        can(cidrhost(cluster.master_ipv4_cidr_block, 0)),
+        can(regex("^([01][0-9]|2[0-3]):[0-5][0-9]$", coalesce(
+          cluster.daily_maintenance_start_time,
+          cluster.daily_maintenance_policy,
+          "00:00",
+        )))
+      ]
+    ]))
+    error_message = "Each cluster must use valid CIDR ranges and a maintenance time in HH:MM format."
+  }
 }
 
 variable "jump_host_machine" {
-  type = string
+  type        = string
   description = "Jump Host Machine"
-  default = "e2-micro"
+  default     = "e2-micro"
 }
 
 variable "jump_host_os" {
-  type = string
+  type        = string
   description = "Jump Host Machine Operating system imaged"
-  default = "debian-cloud/debian-13-trixie-v20260902"
+  default     = "debian-cloud/debian-13-trixie-v20260902"
 }

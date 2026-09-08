@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- Restricted health-check and backend firewall rules to each cluster's service account where one is configured.
+- Consolidated each load balancer's backend service into a single resource aggregating all cluster NEGs, fixing name collisions and unreliable backend selection across multiple clusters.
+- Derived firewall `source_ranges` for backend traffic from each cluster's `proxy_subnet_ip_cidr` instead of a hard-coded CIDR.
+- Scoped each cluster's subnet name with its key to prevent collisions when multiple clusters share a region.
+- Wired `max_rate_per_endpoint` through to both load balancer modules.
+- Removed the unused `vpc_auto_create_subnetworks` reference.
+
+## [1.2.3] - 2026-09-08
+
 ### Fixed
 
 - Added missing variable wiring for the example and GKE cluster configuration.
@@ -69,7 +80,8 @@ All notable changes to this project are documented here.
 - Added service account configuration and a basic deployment example.
 - Added documentation for DNS, VPC, IAM, TiDB, and SurrealDB setup.
 
-[Unreleased]: https://github.com/dvanmali/terraform-google-surrealdb/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/dvanmali/terraform-google-surrealdb/compare/v1.2.3...HEAD
+[1.2.3]: https://github.com/dvanmali/terraform-google-surrealdb/releases/tag/v1.2.3
 [1.2.2]: https://github.com/dvanmali/terraform-google-surrealdb/releases/tag/v1.2.2
 [1.2.1]: https://github.com/dvanmali/terraform-google-surrealdb/releases/tag/v1.2.1
 [1.2.0]: https://github.com/dvanmali/terraform-google-surrealdb/releases/tag/v1.2.0
