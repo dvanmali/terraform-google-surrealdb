@@ -1,3 +1,5 @@
+# @see [Full Configuration](https://github.com/surrealdb/helm-charts/blob/main/charts/surrealdb/values.yaml)
+
 replicaCount: 1
 
 image:
@@ -6,7 +8,10 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: latest
 
+imagePullSecrets: []
+
 nameOverride: "surrealdb"
+fullnameOverride: ""
 
 args: [start]
 
@@ -23,6 +28,9 @@ surrealdb:
   initial_pass: "root"
   port: 8080
 
+strategy:
+  type: RollingUpdate
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
@@ -31,6 +39,19 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+
+podExtraEnv:
+  []
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+initContainers: []
+
+extraContainers: []
 
 service:
   type: NodePort
@@ -48,3 +69,38 @@ resources:
   requests:
     cpu: 500m
     memory: 1Gi
+
+lifecycle: {}
+
+terminationGracePeriodSeconds: null
+
+horizontalPodAutoscaler:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  metrics: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+volumes: []
+
+volumeMounts: []
+
+persistence:
+  enabled: false
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  timeoutSeconds: 5
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+  timeoutSeconds: 5
