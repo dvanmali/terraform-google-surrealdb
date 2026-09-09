@@ -46,6 +46,8 @@ module "external_global_lb" {
   gke_clusters          = module.gke_clusters
   health_checks         = [google_compute_health_check.http-health-check.id]
   dns_public            = var.dns_public
+  balancing_mode        = var.balancing_mode
+  max_utilization       = var.max_utilization
   max_rate_per_endpoint = var.max_rate_per_endpoint
 
   providers = {
@@ -63,6 +65,8 @@ module "internal_cross_regional_lb" {
 
   dns_public            = var.dns_public
   dns_private           = var.dns_private == null ? "${data.google_dns_managed_zone.public.name}-private" : var.dns_private
+  balancing_mode        = var.balancing_mode
+  max_utilization       = var.max_utilization
   max_rate_per_endpoint = var.max_rate_per_endpoint
 
   providers = {

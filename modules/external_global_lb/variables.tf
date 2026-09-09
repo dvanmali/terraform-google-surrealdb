@@ -4,10 +4,34 @@ variable "dns_public" {
   default     = "surrealdb"
 }
 
+variable "balancing_mode" {
+  type        = string
+  description = "Backend balancing mode used for all load balancer backends"
+  default     = "UTILIZATION"
+  validation {
+    condition     = contains(["UTILIZATION", "RATE"], var.balancing_mode)
+    error_message = "balancing_mode must be one of UTILIZATION, RATE, or CONNECTION."
+  }
+}
+
+variable "max_utilization" {
+  type        = number
+  description = "Target utilization for each completed backend endpoint when balancing_mode is UTILIZATION"
+  default     = 0.8
+  validation {
+    condition     = var.max_utilization > 0 && var.max_utilization <= 1
+    error_message = "max_utilization must be greater than zero and less than or equal to 1."
+  }
+}
+
 variable "max_rate_per_endpoint" {
   type        = number
-  description = "Number of requests per second for each endpoint connected to the loadbalancer"
-  default     = 1000000000 # A single Surrealdb can handle millions of connections because each connection is concurrent
+  description = "Number of requests per second for each endpoint when balancing_mode is RATE"
+  default     = 100
+  validation {
+    condition     = var.max_rate_per_endpoint > 0
+    error_message = "max_rate_per_endpoint must be greater than zero."
+  }
 }
 
 variable "gke_clusters" {

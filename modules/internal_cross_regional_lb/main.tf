@@ -27,8 +27,9 @@ resource "google_compute_backend_service" "default" {
     }
     content {
       group                 = backend.value.id
-      balancing_mode        = "RATE"
-      max_rate_per_endpoint = var.max_rate_per_endpoint # Target average HTTP request rate for a single endpoint
+      balancing_mode        = var.balancing_mode
+      max_utilization       = var.balancing_mode == "UTILIZATION" ? var.max_utilization : null
+      max_rate_per_endpoint = var.balancing_mode == "RATE" ? var.max_rate_per_endpoint : null
     }
   }
 }

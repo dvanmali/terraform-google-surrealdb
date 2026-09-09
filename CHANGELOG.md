@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- Load balancer backends now default to `UTILIZATION` balancing with a maximum utilization of 80%. Set `balancing_mode = "RATE"` and configure `max_rate_per_endpoint` to retain rate-based balancing.
+
 ### Changed
 
 - README setup instructions bumps versions of the tidb-operator (v1.6.1 -> v1.6.6) and tikv (v8.5.0 -> v8.5.8)
@@ -12,7 +16,7 @@ All notable changes to this project are documented here.
 - Derived firewall `source_ranges` for backend traffic from each cluster's `proxy_subnet_ip_cidr` instead of a hard-coded CIDR.
 - Scoped each cluster's subnet name with its key to prevent collisions when multiple clusters share a region.
 - Scoped each cluster's zonal NEG name with its key to prevent collisions in multi-cluster deployments.
-- Wired `max_rate_per_endpoint` through to both load balancer modules.
+- Added configurable utilization-based balancing for both load balancer modules while retaining support for `max_rate_per_endpoint` in RATE mode.
 - Removed the unused `vpc_auto_create_subnetworks` reference.
 
 ## [1.2.3] - 2026-09-08
