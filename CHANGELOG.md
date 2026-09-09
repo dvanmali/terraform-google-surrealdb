@@ -10,6 +10,7 @@ All notable changes to this project are documented here.
 
 ### Changed
 
+- Updated the TiKV helper image from Alpine 3.16 to 3.24.
 - README setup instructions bumps versions of the tidb-operator (v1.6.1 -> v1.6.6) and tikv (v8.5.0 -> v8.5.8)
 - Restricted health-check and backend firewall rules to each cluster's service account where one is configured.
 - Consolidated each load balancer's backend service into a single resource aggregating all cluster NEGs, fixing name collisions and unreliable backend selection across multiple clusters.
