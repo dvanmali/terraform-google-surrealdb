@@ -129,19 +129,19 @@ kube-system                Active   8m
 
 1. Install CRDS
 ```bash
-$ k create -f https://raw.githubusercontent.com/pingcap/tidb-operator/v1.6.6/manifests/crd.yaml
+$ k apply -f https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.crds.yaml
 ```
 
 2. Install TiDB Operator Helm chart:
 ```bash
-$ h repo add pingcap https://charts.pingcap.org
+$ h repo add pingcap https://charts.pingcap.com
 $ h repo update
 $ h install \
 	-n tidb-operator \
 	--create-namespace \
 	tidb-operator \
 	pingcap/tidb-operator \
-	--version v1.6.6
+	--version v2.0.0
 ```
 
 3. Verify that the Pods are running
@@ -179,8 +179,7 @@ pingcap/tidb:v8.5.8           0        9m
 
 ## Deploy SurrealDB
 
-Now that we have a TiDB cluster running, we can deploy SurrealDB using the official Helm chart
-The deploy will use the latest SurrealDB Docker image and make it accessible on internet
+Now that we have a TiDB cluster running, we can deploy SurrealDB using the Helm chart included in this repository under [examples/basic/k8s/surrealdb](./examples/basic/k8s/surrealdb). The chart is configured to connect to the TiKV PD service and exposes the SurrealDB service through the GKE NEG.
 
 1. Get the TIKV PD service url to ensure the service is running.
 ```bash
@@ -189,13 +188,13 @@ NAME               TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
 sdb-datastore-pd   ClusterIP   x.x.x.x        <none>        2379/TCP   10m
 ```
 
-2. Copy [values-surreal.yaml](./examples/basic/k8s/values-surreal.yaml) locally. Remember to change the cloud.google.com/neg value to reflect the cluster name (for the example simply replace "\<REGION\>").
+2. Update the chart values to match your cluster and region. The example values file is [examples/basic/k8s/surrealdb/values.yaml](./examples/basic/k8s/surrealdb/values.yaml). Replace the placeholder in `cloud.google.com/neg` with your region or cluster-specific value (for the example, replace "\<REGION\>").
 
-3. Upload the installation
+3. Install the chart from the repository checkout.
 ```bash
-$ h repo add surrealdb https://helm.surrealdb.com
-$ h repo update
-$ h install -f values-surreal.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
+$ cd examples/basic/k8s
+$ h dependency update surrealdb
+$ h upgrade --install surrealdb ./surrealdb -n surreal-cluster --create-namespace
 ```
 
 ## Change Default Admin

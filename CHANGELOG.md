@@ -6,12 +6,12 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
+- TiDB operator support has been upgraded to v2.0.0. This is incompatible with the v1 operator manifests and deployments must be recreated or migrated to the v2 CRDs and chart configuration.
 - Load balancer backends now default to `UTILIZATION` balancing with a maximum utilization of 80%. Set `balancing_mode = "RATE"` and configure `max_rate_per_endpoint` to retain rate-based balancing.
 
 ### Changed
 
-- Updated the TiKV helper image from Alpine 3.16 to 3.24.
-- README setup instructions bumps versions of the tidb-operator (v1.6.1 -> v1.6.6) and tikv (v8.5.0 -> v8.5.8)
+- Updated the README SurrealDB deployment instructions to use the repo-local Helm chart in `examples/basic/k8s/surrealdb` and the bundled values file.
 - Restricted health-check and backend firewall rules to each cluster's service account where one is configured.
 - Consolidated each load balancer's backend service into a single resource aggregating all cluster NEGs, fixing name collisions and unreliable backend selection across multiple clusters.
 - Derived firewall `source_ranges` for backend traffic from each cluster's `proxy_subnet_ip_cidr` instead of a hard-coded CIDR.

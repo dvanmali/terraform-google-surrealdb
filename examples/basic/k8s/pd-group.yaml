@@ -1,0 +1,37 @@
+apiVersion: core.pingcap.com/v1alpha1
+kind: PDGroup
+metadata:
+  name: pd
+  labels:
+    pingcap.com/group: pd
+    pingcap.com/component: pd
+    pingcap.com/cluster: sdb-datastore
+spec:
+  cluster:
+    name: sdb-datastore
+  replicas: 1
+  template:
+    spec:
+      version: v8.5.8
+      resources:
+        cpu: 500m
+        memory: 1Gi
+      nodeSelector:
+        dedicated: pd
+      tolerations:
+      - effect: NoSchedule
+        key: dedicated
+        operator: Equal
+        value: pd
+      topologySpreadConstraints:
+      - topologyKey: topology.kubernetes.io/zone
+      volumes:
+      - name: data
+        storageClassName: premium-rwo
+        mounts:
+        - type: data
+          storage: 10Gi
+      config: |
+        [replication]
+          location-labels = ["topology.kubernetes.io/zone", "kubernetes.io/hostname"]
+          max-replicas = 3

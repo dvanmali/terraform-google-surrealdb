@@ -1,0 +1,33 @@
+apiVersion: core.pingcap.com/v1alpha1
+kind: TiKVGroup
+metadata:
+  name: tikv
+  labels:
+    pingcap.com/group: tikv
+    pingcap.com/component: tikv
+    pingcap.com/cluster: sdb-datastore
+spec:
+  cluster:
+    name: sdb-datastore
+  replicas: 1
+  template:
+    spec:
+      version: v8.5.8
+      resources:
+        cpu: "1"
+        memory: 2Gi
+      nodeSelector:
+        dedicated: tikv
+      tolerations:
+      - effect: NoSchedule
+        key: dedicated
+        operator: Equal
+        value: tikv
+      topologySpreadConstraints:
+      - topologyKey: topology.kubernetes.io/zone
+      volumes:
+      - name: data
+        storageClassName: premium-rwo
+        mounts:
+        - type: data
+          storage: 10Gi

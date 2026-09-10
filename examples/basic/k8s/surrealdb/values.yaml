@@ -1,0 +1,83 @@
+surrealdb:
+  replicaCount: 1
+
+  image:
+    repository: surrealdb/surrealdb
+    pullPolicy: IfNotPresent
+    tag: latest
+
+  imagePullSecrets: []
+
+  nameOverride: "surrealdb"
+  fullnameOverride: ""
+
+  args: [start]
+
+  surrealdb:
+    path: tikv://sdb-datastore-pd:2379
+    log: info
+    auth: true
+    initial_user: "root"
+    initial_pass: "root"
+    port: 8080
+
+  strategy:
+    type: RollingUpdate
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podExtraEnv: []
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  initContainers: []
+  extraContainers: []
+
+  service:
+    type: NodePort
+    port: 8080
+    selector:
+      app: surrealdb
+    annotations:
+      cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-<REGION>-1-neg"}}}'
+
+  ingress:
+    enabled: false
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+  lifecycle: {}
+  terminationGracePeriodSeconds: null
+
+  horizontalPodAutoscaler:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 1
+    metrics: []
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  volumes: []
+  volumeMounts: []
+
+  persistence:
+    enabled: false
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    timeoutSeconds: 5
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http
+    timeoutSeconds: 5

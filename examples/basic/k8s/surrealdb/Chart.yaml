@@ -1,0 +1,9 @@
+apiVersion: v2
+name: surrealdb-tikv
+version: 0.1.0
+description: SurrealDB configured to use the TiKV datastore
+
+dependencies:
+  - name: surrealdb
+    version: ">=0.0.0"
+    repository: https://helm.surrealdb.com
