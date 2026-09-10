@@ -42,7 +42,8 @@ surrealdb:
     selector:
       app: surrealdb
     annotations:
-      cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-<REGION>-1-neg"}}}'
+      # Format: cloud.google.com/neg: '{"exposed_ports": {"<PORT>": {"name": "surrealdb-<CLUSTER_NAME>-neg"}}}'
+      cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-{{ .Environment.Values.clusterName }}-neg"}}}'
 
   ingress:
     enabled: false

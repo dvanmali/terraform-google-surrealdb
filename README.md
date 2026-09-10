@@ -125,6 +125,27 @@ kube-public                Active   8m
 kube-system                Active   8m
 ```
 
+## Quick Deployment
+
+Install `helmfile` first if it is not already available on your workstation.
+
+```bash
+$ brew install helmfile
+$ alias hf="HTTPS_PROXY=localhost:8888 helmfile"
+```
+
+Then use the included [helmfile](./examples/basic/k8s/helmfile.yaml) for a fully scripted deployment.
+
+```bash
+$ cd examples/basic/k8s
+$ hf -f helmfile.yaml apply
+```
+
+This automation installs the TiDB Operator CRDs, deploys the TiDB Operator, creates the `surreal-cluster` namespace, applies the TiDB cluster manifests, and then installs the SurrealDB Helm chart from this repository.
+
+<details>
+<summary>Manual</summary>
+
 ## Deploy TiDB
 
 1. Install CRDS
@@ -132,16 +153,10 @@ kube-system                Active   8m
 $ k apply -f https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.crds.yaml
 ```
 
-2. Install TiDB Operator Helm chart:
+2. Install the TiDB Operator from the GitHub release manifest instead of the Helm repo index:
 ```bash
-$ h repo add pingcap https://charts.pingcap.com
-$ h repo update
-$ h install \
-	-n tidb-operator \
-	--create-namespace \
-	tidb-operator \
-	pingcap/tidb-operator \
-	--version v2.0.0
+$ curl -fsSL https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.yaml -o tidb-operator.local.yaml
+$ k apply -f tidb-operator.local.yaml
 ```
 
 3. Verify that the Pods are running
@@ -156,15 +171,23 @@ tidb-scheduler-xxx            2/2     Running   0          3m30s
 
 Now that we have the TiDB Operator running, it's time to define a TiDB Cluster and let the Operator do the rest.
 
-1. Copy [tikv-cluster.yaml](./examples/basic/k8s/tikv-cluster.yaml) locally.
-
-2. Create the TiDB Cluster
+1. Install the cluster chart from the example directory.
 ```bash
-$ k create ns surreal-cluster
-$ k apply -f tikv-cluster.yaml -n surreal-cluster
+$ cd examples/basic/k8s
+$ h upgrade --install cluster ./cluster -n surreal-cluster --create-namespace
 ```
 
-3. Check the cluster status and wait until it's ready (ie READY=`true`)
+2. Install the PD group chart.
+```bash
+$ h upgrade --install pd-group ./pd-group -n surreal-cluster
+```
+
+3. Install the TiKV group chart.
+```bash
+$ h upgrade --install tikv-group ./tikv-group -n surreal-cluster
+```
+
+4. Check the cluster status and wait until it's ready (ie READY=`true`)
 ```bash
 $ k get tidbcluster -n surreal-cluster
 NAME             READY   PD                  STORAGE   READY   DESIRE   
@@ -192,10 +215,12 @@ sdb-datastore-pd   ClusterIP   x.x.x.x        <none>        2379/TCP   10m
 
 3. Install the chart from the repository checkout.
 ```bash
-$ cd examples/basic/k8s
-$ h dependency update surrealdb
-$ h upgrade --install surrealdb ./surrealdb -n surreal-cluster --create-namespace
+$ h repo add surrealdb https://helm.surrealdb.com
+$ h repo update
+$ h install -f values-surreal.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
 ```
+
+</details>
 
 ## Change Default Admin
 

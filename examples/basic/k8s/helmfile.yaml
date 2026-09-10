@@ -1,0 +1,60 @@
+---
+environments:
+  default:
+    values:
+      - clusterName: sdb-datastore
+
+---
+helmDefaults:
+  wait: true
+  timeout: 600
+
+releases:
+  - name: namespaces
+    namespace: default
+    chart: ./namespaces
+    installed: true
+
+  - name: cluster
+    namespace: surreal-cluster
+    chart: ./cluster
+    needs:
+      - default/namespaces
+    hooks:
+      - events: [prepare]
+        showlogs: true
+        command: kubectl
+        args:
+          - apply
+          - --filename
+          - https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.crds.yaml
+      - events: [prepare]
+        showlogs: true
+        command: kubectl
+        args:
+          - apply
+          - --filename
+          - https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.yaml
+
+  - name: pd-group
+    namespace: surreal-cluster
+    chart: ./pd-group
+    needs:
+      - default/namespaces
+      - surreal-cluster/cluster
+
+  - name: tikv-group
+    namespace: surreal-cluster
+    chart: ./tikv-group
+    needs:
+      - default/namespaces
+      - surreal-cluster/pd-group
+
+  - name: surrealdb
+    namespace: surreal-cluster
+    chart: ./surrealdb
+    needs:
+      - default/namespaces
+      - surreal-cluster/tikv-group
+    values:
+      - ./surrealdb/values.yaml.gotmpl

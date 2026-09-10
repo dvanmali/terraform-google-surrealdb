@@ -4,6 +4,9 @@
 .terraform/
 **/.terraform/*
 
+# Local files
+*.local.yaml
+
 # Terraform lockfile
 .terraform.lock.hcl
 
