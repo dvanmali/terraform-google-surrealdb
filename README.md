@@ -26,10 +26,9 @@ We must create the Public DNS separately (not part of our Terraform) for the fol
 ```bash
 $ export DOMAIN="db.example.com" # Replace with your domain
 $ gcloud dns managed-zones create surrealdb \
-	--description="Public DNS zone for generating DNS certificates" \
+	--description="Public DNS for $DOMAIN" \
 	--dns-name=$DOMAIN \
-	--visibility="public" \
-	--dnssec-state="off"
+	--visibility="public"
 ```
 
 Add the generated NS records for that subdomain to your domain server (where your domains are hosted). The host name for the record must be the full path name to the name server. For example, the above example it will be "db.example.com".
