@@ -21,12 +21,12 @@ resource "google_compute_backend_service" "default" {
 
   dynamic "backend" {
     for_each = {
-      for neg in flatten([
-        for cluster in values(var.gke_clusters) : cluster.neg
-      ]) : neg.id => neg
+      for neg_id in flatten([
+        for cluster in values(var.gke_clusters) : values(cluster.neg)
+      ]) : neg_id => neg_id
     }
     content {
-      group                 = backend.value.id
+      group                 = backend.value
       balancing_mode        = var.balancing_mode
       max_utilization       = var.balancing_mode == "UTILIZATION" ? var.max_utilization : null
       max_rate_per_endpoint = var.balancing_mode == "RATE" ? var.max_rate_per_endpoint : null

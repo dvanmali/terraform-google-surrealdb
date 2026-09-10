@@ -14,6 +14,9 @@ output "region" {
 }
 
 output "neg" {
-  value       = google_compute_network_endpoint_group.neg
-  description = "Zone locations where the cluster exists"
+  value = {
+    for zone, neg in google_compute_network_endpoint_group.neg :
+    zone => neg.id
+  }
+  description = "NEG IDs for each zone in the cluster"
 }

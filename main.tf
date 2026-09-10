@@ -10,9 +10,9 @@ module "gke_clusters" {
   for_each = var.gke_clusters
   source   = "./modules/gke_autopilot_cluster"
 
-  key                    = each.key
+  key                    = replace(each.key, "_", "-")
   vpc                    = data.google_compute_network.vpc.id
-  vpc_subnet             = "surrealdb-${each.key}"
+  vpc_subnet             = "surrealdb-${replace(each.key, "_", "-")}"
   vpc_subnet_ip          = each.value.vpc_subnet_ip # 256 IP addresses (Reserves 10.1.0.0-10.1.0.255)
   proxy_subnet_ip_cidr   = each.value.proxy_subnet_ip_cidr
   region                 = each.value.region
