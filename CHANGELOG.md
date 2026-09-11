@@ -12,7 +12,7 @@ All notable changes to this project are documented here.
 
 ### Changed
 
-- Updated the README SurrealDB deployment instructions to use the repo-local Helm chart in `examples/basic/k8s/surrealdb` and the bundled values file.
+- Updated the README SurrealDB deployment instructions to use the repo-local Helm chart in `examples/basic/charts/surrealdb` and the bundled values file.
 - Restricted health-check and backend firewall rules to each cluster's service account where one is configured.
 - Consolidated each load balancer's backend service into a single resource aggregating all cluster NEGs, fixing name collisions and unreliable backend selection across multiple clusters.
 - Derived firewall `source_ranges` for backend traffic from each cluster's `proxy_subnet_ip_cidr` instead of a hard-coded CIDR.

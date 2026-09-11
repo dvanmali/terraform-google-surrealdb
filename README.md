@@ -134,10 +134,10 @@ $ brew install helmfile
 $ alias hf="HTTPS_PROXY=localhost:8888 helmfile"
 ```
 
-Then use the included [helmfile](./examples/basic/k8s/helmfile.yaml) for a fully scripted deployment.
+Then use the included [helmfile](./examples/basic/charts/helmfile.yaml) for a fully scripted deployment.
 
 ```bash
-$ cd examples/basic/k8s
+$ cd examples/basic/charts
 $ hf -f helmfile.yaml apply
 ```
 
@@ -173,7 +173,7 @@ Now that we have the TiDB Operator running, it's time to define a TiDB Cluster a
 
 1. Install the cluster chart from the example directory.
 ```bash
-$ cd examples/basic/k8s
+$ cd examples/basic/charts
 $ h upgrade --install cluster ./cluster -n surreal-cluster --create-namespace
 ```
 
@@ -202,7 +202,7 @@ pingcap/tidb:v8.5.8           0        9m
 
 ## Deploy SurrealDB
 
-Now that we have a TiDB cluster running, we can deploy SurrealDB using the Helm chart included in this repository under [examples/basic/k8s/surrealdb](./examples/basic/k8s/surrealdb). The chart is configured to connect to the TiKV PD service and exposes the SurrealDB service through the GKE NEG.
+Now that we have a TiDB cluster running, we can deploy SurrealDB using the Helm chart included in this repository under [examples/basic/charts/surrealdb](./examples/basic/charts/surrealdb). The chart is configured to connect to the TiKV PD service and exposes the SurrealDB service through the GKE NEG.
 
 1. Get the TIKV PD service url to ensure the service is running.
 ```bash
@@ -211,7 +211,7 @@ NAME               TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
 sdb-datastore-pd   ClusterIP   x.x.x.x        <none>        2379/TCP   10m
 ```
 
-2. Update the chart values to match your cluster and region. The example values file is [examples/basic/k8s/surrealdb/values.yaml](./examples/basic/k8s/surrealdb/values.yaml). Replace the placeholder in `cloud.google.com/neg` with your region or cluster-specific value (for the example, replace "\<REGION\>").
+2. Update the chart values to match your cluster and region. The example values file is [examples/basic/charts/surrealdb/values.yaml](./examples/basic/charts/surrealdb/values.yaml). Replace the placeholder in `cloud.google.com/neg` with your region or cluster-specific value (for the example, replace "\<REGION\>").
 
 3. Install the chart from the repository checkout.
 ```bash
