@@ -6,11 +6,11 @@ variable "dns_public" {
 
 variable "balancing_mode" {
   type        = string
-  description = "Backend balancing mode used for all load balancer backends"
-  default     = "UTILIZATION"
+  description = "Backend balancing mode used for all load balancer backends. NEGs support RATE or CONNECTION; UTILIZATION is not supported."
+  default     = "RATE"
   validation {
-    condition     = contains(["UTILIZATION", "RATE"], var.balancing_mode)
-    error_message = "balancing_mode must be one of UTILIZATION, RATE, or CONNECTION."
+    condition     = contains(["RATE", "CONNECTION"], var.balancing_mode)
+    error_message = "balancing_mode must be one of RATE or CONNECTION for NEG-based backends."
   }
 }
 

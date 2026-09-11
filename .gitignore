@@ -5,6 +5,7 @@
 **/.terraform/*
 
 # Local files
+*.local.tf
 *.local.yaml
 
 # Terraform lockfile

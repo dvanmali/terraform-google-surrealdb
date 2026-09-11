@@ -7,7 +7,8 @@ All notable changes to this project are documented here.
 ### Breaking Changes
 
 - TiDB operator support has been upgraded to v2.0.0. This is incompatible with the v1 operator manifests and deployments must be recreated or migrated to the v2 CRDs and chart configuration.
-- Load balancer backends now default to `UTILIZATION` balancing with a maximum utilization of 80%. Set `balancing_mode = "RATE"` and configure `max_rate_per_endpoint` to retain rate-based balancing.
+- VPC subnet names now include the cluster name and are incompatable with v1.
+- `max_rate_per_endpoint` defaults to more reasonable value 100. Update value to better match your load.
 
 ### Changed
 
