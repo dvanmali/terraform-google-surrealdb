@@ -1,84 +1,86 @@
+replicaCount: 1
+
+image:
+  repository: surrealdb/surrealdb
+  pullPolicy: IfNotPresent
+  # Recommend to replace with a specific version instead of 'latest' for stability
+  tag: latest
+
+imagePullSecrets: []
+
+nameOverride: "surrealdb"
+fullnameOverride: ""
+
+args: [start]
+
 surrealdb:
-  replicaCount: 1
+  path: tikv://pd-pd:2379
+  log: info
+  auth: true
+  initial_user: "root"
+  initial_pass: "root"
+  # For kind locally, use 8080
+  port: 8080
 
-  image:
-    repository: surrealdb/surrealdb
-    pullPolicy: IfNotPresent
-    tag: latest
+strategy:
+  type: RollingUpdate
 
-  imagePullSecrets: []
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
 
-  nameOverride: "surrealdb"
-  fullnameOverride: ""
+podExtraEnv: []
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+initContainers: []
+extraContainers: []
 
-  args: [start]
+service:
+  type: NodePort
+  # For kind locally, use 8080
+  port: 8080
+  selector:
+    app: surrealdb
+  annotations:
+    # Format: cloud.google.com/neg: '{"exposed_ports": {"<PORT>": {"name": "surrealdb-<CLUSTER_NAME>-neg"}}}'
+    cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-<REGION>-1-neg"}}}'
 
-  surrealdb:
-    path: tikv://sdb-datastore-pd:2379
-    log: info
-    auth: true
-    initial_user: "root"
-    initial_pass: "root"
-    port: 8080
+ingress:
+  enabled: false
 
-  strategy:
-    type: RollingUpdate
+# resources:
+#   requests:
+#     cpu: 500m
+#     memory: 1Gi
 
-  serviceAccount:
-    create: true
-    annotations: {}
-    name: ""
+lifecycle: {}
+terminationGracePeriodSeconds: null
 
-  podExtraEnv: []
-  podAnnotations: {}
-  podSecurityContext: {}
-  securityContext: {}
-  initContainers: []
-  extraContainers: []
+horizontalPodAutoscaler:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  metrics: []
 
-  service:
-    type: NodePort
-    port: 8080
-    selector:
-      app: surrealdb
-    annotations:
-      # Format: cloud.google.com/neg: '{"exposed_ports": {"<PORT>": {"name": "surrealdb-<CLUSTER_NAME>-neg"}}}'
-      cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-{{ .Environment.Values.clusterName }}-neg"}}}'
+nodeSelector: {}
+tolerations: []
+affinity: {}
+volumes: []
+volumeMounts: []
 
-  ingress:
-    enabled: false
+persistence:
+  enabled: false
 
-  resources:
-    requests:
-      cpu: 500m
-      memory: 1Gi
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  timeoutSeconds: 5
 
-  lifecycle: {}
-  terminationGracePeriodSeconds: null
-
-  horizontalPodAutoscaler:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 1
-    metrics: []
-
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-  volumes: []
-  volumeMounts: []
-
-  persistence:
-    enabled: false
-
-  livenessProbe:
-    httpGet:
-      path: /health
-      port: http
-    timeoutSeconds: 5
-
-  readinessProbe:
-    httpGet:
-      path: /ready
-      port: http
-    timeoutSeconds: 5
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+  timeoutSeconds: 5

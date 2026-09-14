@@ -14,20 +14,28 @@ spec:
     spec:
       version: v8.5.8
       resources:
-        cpu: "1"
-        memory: 2Gi
-      nodeSelector:
-        dedicated: tikv
-      tolerations:
-      - effect: NoSchedule
-        key: dedicated
-        operator: Equal
-        value: tikv
-      topologySpreadConstraints:
-      - topologyKey: topology.kubernetes.io/zone
+        cpu: 500m
+        memory: 3Gi
       volumes:
       - name: data
-        storageClassName: premium-rwo
+        storage: 1Gi
+        # storageClassName: premium-rwo
         mounts:
         - type: data
-          storage: 10Gi
+      overlay:
+        pod:
+          spec:
+            nodeSelector:
+              dedicated: tikv
+              # # Recommended when running on GKE (non-Autopilot)
+              # cloud.google.com/machine-family: n2
+              # node.kubernetes.io/instance-type: n2-standard-16
+            tolerations:
+            - effect: NoSchedule
+              key: dedicated
+              operator: Equal
+              value: tikv
+            topologySpreadConstraints:
+            - topologyKey: topology.kubernetes.io/zone
+              maxSkew: 1
+              whenUnsatisfiable: DoNotSchedule

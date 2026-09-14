@@ -16,22 +16,30 @@ spec:
       resources:
         cpu: 500m
         memory: 1Gi
-      nodeSelector:
-        dedicated: pd
-      tolerations:
-      - effect: NoSchedule
-        key: dedicated
-        operator: Equal
-        value: pd
-      topologySpreadConstraints:
-      - topologyKey: topology.kubernetes.io/zone
       volumes:
       - name: data
-        storageClassName: premium-rwo
+        storage: 1Gi
+        # storageClassName: premium-rwo
         mounts:
         - type: data
-          storage: 10Gi
       config: |
         [replication]
           location-labels = ["topology.kubernetes.io/zone", "kubernetes.io/hostname"]
           max-replicas = 3
+      overlay:
+        pod:
+          spec:
+            nodeSelector:
+              dedicated: pd
+              # # Recommended when running on GKE (non-Autopilot)
+              # cloud.google.com/machine-family: n2
+              # node.kubernetes.io/instance-type: n2-standard-4
+            tolerations:
+            - effect: NoSchedule
+              key: dedicated
+              operator: Equal
+              value: pd
+            topologySpreadConstraints:
+            - topologyKey: topology.kubernetes.io/zone
+              maxSkew: 1
+              whenUnsatisfiable: DoNotSchedule

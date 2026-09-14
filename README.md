@@ -60,6 +60,11 @@ $ gcloud compute networks create $VPC_NAME --subnet-mode=custom --enable-ula-int
 
 See [examples](./examples/) for example configurations. The following follows the [basic setup](./examples/basic/).
 
+### Prerequisites
+
+- Helm v4
+- Kubectl
+
 1. Copy the [main.tf](./examples/basic/main.tf) to your own `main.tf` file. Remember, to replace the local values with your own variable values. Specifically, replace "\<PROJECT_ID\>", "\<VPC_NAME\>" and "\<REGION\>".
 
 2. Initialize the provider plugins, format the configuration, and validate it locally.
@@ -125,51 +130,28 @@ kube-public                Active   8m
 kube-system                Active   8m
 ```
 
-## Quick Deployment
-
-Install `helmfile` first if it is not already available on your workstation.
-
-```bash
-$ brew install helmfile
-$ alias hf="HTTPS_PROXY=localhost:8888 helmfile"
-```
-
-Then use the included [helmfile](./examples/basic/charts/helmfile.yaml) for a fully scripted deployment.
-
-```bash
-$ cd examples/basic/charts
-$ hf -f helmfile.yaml apply
-```
-
-This automation installs the TiDB Operator CRDs, deploys the TiDB Operator, creates the `surreal-cluster` namespace, applies the TiDB cluster manifests, and then installs the SurrealDB Helm chart from this repository.
-
-<details>
-<summary>Manual</summary>
-
-## Deploy TiDB
+## Deploy TiDB Operator
 
 1. Install CRDS
 ```bash
-$ k apply -f https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.crds.yaml
+$ k apply -f https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.crds.yaml --server-side
 ```
 
 2. Install the TiDB Operator from the GitHub release manifest instead of the Helm repo index:
 ```bash
-$ curl -fsSL https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.yaml -o tidb-operator.local.yaml
-$ k apply -f tidb-operator.local.yaml
+$ k apply -f https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.yaml --server-side
 ```
 
-3. Verify that the Pods are running
+3. Verify that the Pods are running (tip: add the `--watch` command to wait for changes.)
 ```bash
-$ k get pods -n tidb-operator
+$ k get pods -n tidb-admin
 NAME                          READY   STATUS    RESTARTS   AGE
-tidb-controller-manager-xxx   1/1     Running   0          3m30s
-tidb-scheduler-xxx            2/2     Running   0          3m30s
+tidb-operator-xxx             1/1     Running   0          3m30s
 ```
 
-## Create TiDB Cluster
+## Create TiKV Cluster
 
-Now that we have the TiDB Operator running, it's time to define a TiDB Cluster and let the Operator do the rest.
+Now that we have the TiDB Operator running, it's time to define a TiKV Cluster and let the Operator do the rest.
 
 1. Install the cluster chart from the example directory.
 ```bash
@@ -180,35 +162,36 @@ $ h upgrade --install cluster ./cluster -n surreal-cluster --create-namespace
 2. Install the PD group chart.
 ```bash
 $ h upgrade --install pd-group ./pd-group -n surreal-cluster
+$ k get pdgroup -n surreal-cluster
+NAME   CLUSTER         DESIRED   READY   UPDATED   UPDATEREVISION     CURRENTREVISION    SYNCED   READY   AGE
+pd     sdb-datastore   1         1       1         pd-pd-xxx          pd-pd-xxx          True     True    45s
 ```
 
 3. Install the TiKV group chart.
 ```bash
 $ h upgrade --install tikv-group ./tikv-group -n surreal-cluster
+$ k get tikvgroup -n surreal-cluster
+NAME   CLUSTER         DESIRED   READY   UPDATED   UPDATEREVISION     CURRENTREVISION    SYNCED   READY   AGE
+tikv   sdb-datastore   1         1       1         tikv-tikv-xxx      tikv-tikv-xxx      True     True    68s
 ```
 
 4. Check the cluster status and wait until it's ready (ie READY=`true`)
 ```bash
-$ k get tidbcluster -n surreal-cluster
-NAME             READY   PD                  STORAGE   READY   DESIRE   
-sdb-datastore    True    pingcap/pd:v8.5.8   10Gi      3       3
-
-TIKV                  STORAGE   READY   DESIRE   
-pingcap/tikv:v8.5.8   10Gi      3       3
-
-TIDB                  READY   DESIRE   AGE
-pingcap/tidb:v8.5.8           0        9m
+$ k get pods -n surreal-cluster
+NAME              READY     STATUS    RESTARTS   AGE
+pd-pd-xxx         1/1       Running   0          8m
+tikv-tikv-xxx     1/1       Running   0          2m
 ```
 
 ## Deploy SurrealDB
 
 Now that we have a TiDB cluster running, we can deploy SurrealDB using the Helm chart included in this repository under [examples/basic/charts/surrealdb](./examples/basic/charts/surrealdb). The chart is configured to connect to the TiKV PD service and exposes the SurrealDB service through the GKE NEG.
 
-1. Get the TIKV PD service url to ensure the service is running.
+1. Get the TIKV PD service url to ensure the service is running. For example, the following interprets the url "tikv://pd-pd:2379":
 ```bash
-$ k get svc/sdb-datastore-pd -n surreal-cluster
-NAME               TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
-sdb-datastore-pd   ClusterIP   x.x.x.x        <none>        2379/TCP   10m
+$ k get svc/pd-pd -n surreal-cluster
+NAME    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
+pd-pd   ClusterIP   x.x.x.x        <none>        2379/TCP,2380/TCP   10m
 ```
 
 2. Update the chart values to match your cluster and region. The example values file is [examples/basic/charts/surrealdb/values.yaml](./examples/basic/charts/surrealdb/values.yaml). Replace the placeholder in `cloud.google.com/neg` with your region or cluster-specific value (for the example, replace "\<REGION\>").
@@ -217,10 +200,21 @@ sdb-datastore-pd   ClusterIP   x.x.x.x        <none>        2379/TCP   10m
 ```bash
 $ h repo add surrealdb https://helm.surrealdb.com
 $ h repo update
-$ h install -f values-surreal.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
+$ h upgrade --install -f values.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
 ```
 
-</details>
+4. Check the deployment status to check everything is ready.
+```bash
+$ k get deployment -n surreal-cluster
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+surrealdb   1/1     1            1           9m29s
+```
+
+Notes when testing in a local [kind](https://kind.sigs.k8s.io/) cluster:
+
+- Start a kind cluster using `kind create cluster --config examples/basic/kind-config.yaml` and delete with `kind delete cluster`
+- Forward using `k port-forward svc/surrealdb 8000:8000 -n surreal-cluster`. Ensure the ports in [values.yaml](./examples/basic/charts/surrealdb/values.yaml) are 8000 instead of 8080.
+- In a new shell, run `surreal sql -u root -p root -e http://localhost:8000`.
 
 ## Change Default Admin
 
