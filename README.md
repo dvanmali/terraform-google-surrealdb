@@ -84,6 +84,55 @@ $ terraform plan -out=tfplan
 $ terraform apply tfplan
 ```
 
+### Encryption at Rest
+
+Encryption at rest is opt-in and recommended in cloud deployments. Add `encryption_at_rest` to each entry in `gke_clusters` before applying:
+
+```hcl
+gke_clusters = {
+  "<REGION>-1" = {
+    # ...other cluster settings...
+    encryption_at_rest = {
+      enabled = true
+    }
+  }
+}
+```
+
+Terraform creates a symmetric Google Cloud KMS key and a dedicated Google service account per cluster. It also grants Workload Identity access to two Kubernetes service accounts: `gke-pd-<cluster_name>` and `gke-tikv-<cluster_name>`. The KMS key location must cover the cluster region.
+
+After applying Terraform, select the cluster outputs and create the two annotated Kubernetes service accounts:
+
+```bash
+CLUSTER_NAME="<REGION>-1"
+KMS_KEY_ID=$(terraform output -json encryption_at_rest_key_ids | jq -r --arg cluster "$CLUSTER_NAME" '.[$cluster]')
+GCP_SERVICE_ACCOUNT=$(terraform output -json encryption_at_rest_service_account_emails | jq -r --arg cluster "$CLUSTER_NAME" '.[$cluster]')
+PD_SERVICE_ACCOUNT="gke-pd-${CLUSTER_NAME}"
+TIKV_SERVICE_ACCOUNT="gke-tikv-${CLUSTER_NAME}"
+
+kubectl create namespace surreal-cluster --dry-run=client -o yaml | kubectl apply -f -
+kubectl create serviceaccount "$PD_SERVICE_ACCOUNT" -n surreal-cluster --dry-run=client -o yaml | kubectl apply -f -
+kubectl create serviceaccount "$TIKV_SERVICE_ACCOUNT" -n surreal-cluster --dry-run=client -o yaml | kubectl apply -f -
+kubectl annotate serviceaccount "$PD_SERVICE_ACCOUNT" -n surreal-cluster \
+  "iam.gke.io/gcp-service-account=$GCP_SERVICE_ACCOUNT" --overwrite
+kubectl annotate serviceaccount "$TIKV_SERVICE_ACCOUNT" -n surreal-cluster \
+  "iam.gke.io/gcp-service-account=$GCP_SERVICE_ACCOUNT" --overwrite
+
+helm upgrade --install pd-group ./examples/basic/charts/pd-group -n surreal-cluster \
+  --set encryption.enabled=true \
+  --set-string serviceAccountName="$PD_SERVICE_ACCOUNT" \
+  --set-string encryption.kms.keyID="$KMS_KEY_ID"
+
+helm upgrade --install tikv-group ./examples/basic/charts/tikv-group -n surreal-cluster \
+  --set encryption.enabled=true \
+  --set-string serviceAccountName="$TIKV_SERVICE_ACCOUNT" \
+  --set-string encryption.kms.keyID="$KMS_KEY_ID"
+```
+
+The charts use `gcp_v2` and application default credentials from Workload Identity; no credential file is stored in the repository. TiKV data keys rotate every seven days by default, while the KMS key rotates every 30 days. Existing data is not retroactively encrypted immediately, and data paths must remain stable after encryption is enabled.
+
+To rotate the master key, configure the new and previous KMS keys in the TiKV and PD configuration and perform a rolling restart. Keep the previous key available until all existing data has been re-encrypted.
+
 ## Setup Jump Host
 
 To reach our private GKE control plane, we install tiny proxy which proxies our aliased kubctl and helm commands.

@@ -11,6 +11,7 @@ module "gke_clusters" {
   source   = "./modules/gke_autopilot_cluster"
 
   key                    = replace(each.key, "_", "-")
+  project_id             = var.project_id
   vpc                    = data.google_compute_network.vpc.id
   vpc_subnet             = "surrealdb-${replace(each.key, "_", "-")}"
   vpc_subnet_ip          = each.value.vpc_subnet_ip # 256 IP addresses (Reserves 10.1.0.0-10.1.0.255)
@@ -27,6 +28,8 @@ module "gke_clusters" {
     "00:00",
   )
   cluster_service_account_email = each.value.cluster_service_account_email
+  enable_workload_identity      = each.value.encryption_at_rest.enabled
+  encryption_at_rest            = each.value.encryption_at_rest
 
   jump_host_ip                    = each.value.jump_host_ip
   jump_host_zone                  = each.value.jump_host_zone

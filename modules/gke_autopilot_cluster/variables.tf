@@ -3,6 +3,34 @@ variable "key" {
   description = "Key value used when naming the GKE cluster and its associated resources"
 }
 
+variable "project_id" {
+  type        = string
+  description = "Google Cloud project ID containing the GKE cluster"
+}
+
+variable "enable_workload_identity" {
+  type        = bool
+  description = "Enable Workload Identity for standard GKE clusters"
+  default     = true
+}
+
+variable "encryption_at_rest" {
+  type = object({
+    enabled                  = optional(bool, false)
+    key_ring_name            = optional(string, "surrealdb-encryption")
+    key_name                 = optional(string, "surrealdb-data")
+    service_account_id       = optional(string, "surrealdb-encryption")
+    kubernetes_namespace     = optional(string, "surreal-cluster")
+    pd_service_account       = optional(string)
+    tikv_service_account     = optional(string)
+    data_encryption_method   = optional(string, "aes256-ctr")
+    data_key_rotation_period = optional(string, "168h")
+    kms_rotation_period      = optional(string, "2592000s")
+  })
+  description = "Opt-in TiKV and PD encryption-at-rest configuration backed by Google Cloud KMS."
+  default     = {}
+}
+
 variable "vpc" {
   type        = string
   description = "VPC deployment network name"

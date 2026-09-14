@@ -93,6 +93,18 @@ variable "gke_clusters" {
     daily_maintenance_start_time  = optional(string)      # Defaults to midnight (HH:MM)
     daily_maintenance_policy      = optional(string)      # Deprecated alias for daily_maintenance_start_time
     cluster_service_account_email = optional(string)
+    encryption_at_rest = optional(object({
+      enabled                  = optional(bool, false)
+      key_ring_name            = optional(string, "surrealdb-encryption")
+      key_name                 = optional(string, "surrealdb-data")
+      service_account_id       = optional(string, "surrealdb-encryption")
+      kubernetes_namespace     = optional(string, "surreal-cluster")
+      pd_service_account       = optional(string)
+      tikv_service_account     = optional(string)
+      data_encryption_method   = optional(string, "aes256-ctr")
+      data_key_rotation_period = optional(string, "168h")
+      kms_rotation_period      = optional(string, "2592000s")
+    }), {})
   }))
   description = "Map of all clusters to deploy"
   validation {
@@ -105,7 +117,11 @@ variable "gke_clusters" {
           cluster.daily_maintenance_start_time,
           cluster.daily_maintenance_policy,
           "00:00",
-        )))
+        ))),
+        contains(
+          ["aes128-ctr", "aes192-ctr", "aes256-ctr", "sm4-ctr"],
+          cluster.encryption_at_rest.data_encryption_method,
+        )
       ]
     ]))
     error_message = "Each cluster must use valid CIDR ranges and a maintenance time in HH:MM format."

@@ -37,6 +37,13 @@ resource "google_container_cluster" "surreal" {
 
   enable_autopilot = var.enable_autopilot
 
+  dynamic "workload_identity_config" {
+    for_each = var.enable_workload_identity && !var.enable_autopilot ? [1] : []
+    content {
+      workload_pool = "${var.project_id}.svc.id.goog"
+    }
+  }
+
   private_cluster_config {
     enable_private_nodes    = true
     enable_private_endpoint = true

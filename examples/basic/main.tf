@@ -17,6 +17,9 @@ locals {
       enable_autopilot             = true
       enable_backup                = true # (Recommended)
       daily_maintenance_start_time = "00:00"
+      encryption_at_rest = {
+        enabled = true
+      }
       # cluster_service_account_email = "" # (Recommended) this value should be filled out before cluster creation
     }
   }

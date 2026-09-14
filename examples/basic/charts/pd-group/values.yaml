@@ -1,0 +1,10 @@
+encryption:
+  enabled: false
+  dataEncryptionMethod: aes256-ctr
+  dataKeyRotationPeriod: 168h
+  kms:
+    keyID: ""
+    vendor: gcp_v2
+
+# Format: gke-pd-<cluster_key>
+serviceAccountName: gke-pd-us-<REGION>-1
