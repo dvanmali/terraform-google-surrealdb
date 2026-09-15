@@ -7,4 +7,4 @@ encryption:
     vendor: gcp_v2
 
 # Format: gke-pd-<cluster_key>
-serviceAccountName: gke-pd-us-<REGION>-1
+serviceAccountName: gke-pd-<REGION>-1

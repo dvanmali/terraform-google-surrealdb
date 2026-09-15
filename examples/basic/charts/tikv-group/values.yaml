@@ -7,4 +7,4 @@ encryption:
     vendor: gcp_v2
 
 # Format: gke-tikv-<cluster_key>
-serviceAccountName: gke-tikv-us-<REGION>-1
+serviceAccountName: gke-tikv-<REGION>-1
