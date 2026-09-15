@@ -326,6 +326,10 @@ See [Contribution Guidelines](./)
 
 ## Closing
 
-This setup took many hours of development, so if you found this following repository helpful or if you used this in your deployment, please give us star :star:
+This setup took many hours of development, so if you found this following repository helpful or if you used this in your deployment, please feel free to donate or give a star :star:
+
+<a href="https://ko-fi.com/dvanmali" target="_blank">
+  <img src="https://img.shields.io/badge/Ko--fi-FF5E5B?logo=ko-fi&logoColor=white" alt="Support me on Ko-fi" height="35" />
+</a>
 
 Thanks! :heart: :heart: :heart:
