@@ -224,7 +224,7 @@ NAME   CLUSTER         DESIRED   READY   UPDATED   UPDATEREVISION     CURRENTREV
 tikv   sdb-datastore   1         1       1         tikv-tikv-xxx      tikv-tikv-xxx      True     True    68s
 ```
 
-4. Check the cluster status and wait until it's ready (ie READY=`true`)
+4. Check the cluster status and wait until it's ready (all ready and running).
 ```bash
 $ k get pods -n surreal-cluster
 NAME              READY     STATUS    RESTARTS   AGE
@@ -236,23 +236,16 @@ tikv-tikv-xxx     1/1       Running   0          2m
 
 Now that we have a TiDB cluster running, we can deploy SurrealDB using the Helm chart included in this repository under [examples/basic/charts/surrealdb](./examples/basic/charts/surrealdb). The chart is configured to connect to the TiKV PD service and exposes the SurrealDB service through the GKE NEG.
 
-1. Get the TIKV PD service url to ensure the service is running. For example, the following interprets the url "tikv://pd-pd:2379":
-```bash
-$ k get svc/pd-pd -n surreal-cluster
-NAME    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
-pd-pd   ClusterIP   x.x.x.x        <none>        2379/TCP,2380/TCP   10m
-```
+1. Update the chart values to match your cluster and region. The example values file is [examples/basic/charts/surrealdb/values.yaml](./examples/basic/charts/surrealdb/values.yaml). Replace the placeholder in `cloud.google.com/neg` with your region or cluster-specific value (for the example, replace "\<REGION\>").
 
-2. Update the chart values to match your cluster and region. The example values file is [examples/basic/charts/surrealdb/values.yaml](./examples/basic/charts/surrealdb/values.yaml). Replace the placeholder in `cloud.google.com/neg` with your region or cluster-specific value (for the example, replace "\<REGION\>").
-
-3. Install the chart from the repository checkout.
+2. Install the chart from the repository checkout.
 ```bash
 $ h repo add surrealdb https://helm.surrealdb.com
 $ h repo update
 $ h upgrade --install -f values.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
 ```
 
-4. Check the deployment status to check everything is ready.
+3. Check the deployment status to check everything is ready.
 ```bash
 $ k get deployment -n surreal-cluster
 NAME        READY   UP-TO-DATE   AVAILABLE   AGE
