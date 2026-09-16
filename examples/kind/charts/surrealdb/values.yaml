@@ -19,19 +19,14 @@ surrealdb:
   auth: true
   initial_user: "root"
   initial_pass: "root"
-  # For kind locally, use 8080
-  port: 8080
-  # You can specify a custom service account name here (e.g., gke-surreal-prod, gke-surrealdb-<CLUSTER_NAME>)
-  # @see - serviceAccount.serviceAccountName
-  serviceAccountName: gke-surrealdb-<REGION>-1
+  port: 8000
+
 
 strategy:
   type: RollingUpdate
 
 serviceAccount:
-  create: true
-  serviceAccountName: gke-surrealdb-<REGION>-1
-  annotations: {}
+  create: false
 
 podExtraEnv: []
 podAnnotations: {}
@@ -42,13 +37,9 @@ extraContainers: []
 
 service:
   type: NodePort
-  # For kind locally, use 8080
-  port: 8080
+  port: 8000
   selector:
     app: surrealdb
-  annotations:
-    # Format: cloud.google.com/neg: '{"exposed_ports": {"<PORT>": {"name": "surrealdb-<CLUSTER_NAME>-neg"}}}'
-    cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-<REGION>-1-neg"}}}'
 
 ingress:
   enabled: false

@@ -95,14 +95,12 @@ variable "gke_clusters" {
     cluster_service_account_email = optional(string)
     encryption_at_rest = optional(object({
       enabled                  = optional(bool, false)
-      key_ring_name            = optional(string, "surrealdb-encryption")
-      key_name                 = optional(string, "surrealdb-data")
-      service_account_id       = optional(string, "surrealdb-encryption")
+      key_ring_name            = optional(string, "sdb-encrypt")
+      key_name                 = optional(string, "sdb-storage")
+      service_account_id       = optional(string, "sdb-encrypt")
       kubernetes_namespace     = optional(string, "surreal-cluster")
       pd_service_account       = optional(string)
       tikv_service_account     = optional(string)
-      data_encryption_method   = optional(string, "aes256-ctr")
-      data_key_rotation_period = optional(string, "168h")
       kms_rotation_period      = optional(string, "2592000s")
     }), {})
   }))
@@ -118,10 +116,6 @@ variable "gke_clusters" {
           cluster.daily_maintenance_policy,
           "00:00",
         ))),
-        contains(
-          ["aes128-ctr", "aes192-ctr", "aes256-ctr", "sm4-ctr"],
-          cluster.encryption_at_rest.data_encryption_method,
-        )
       ]
     ]))
     error_message = "Each cluster must use valid CIDR ranges and a maintenance time in HH:MM format."
@@ -138,4 +132,15 @@ variable "jump_host_os" {
   type        = string
   description = "Jump Host Machine Operating system imaged"
   default     = "debian-cloud/debian-13-trixie-v20260902"
+}
+
+variable "kms_crypto_get_random_bytes_role" {
+  type = object({
+    id          = optional(string, "cryptoGetRandomBytes")
+    name        = optional(string, "SurrealDB Crypto Get Random Bytes")
+    description = optional(string, "Grants the minimum KMS permissions to generate random bytes.")
+    stage       = optional(string, "GA")
+  })
+  description = "Custom IAM role configuration for Cloud KMS random byte access."
+  default     = {}
 }

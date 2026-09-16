@@ -4,7 +4,7 @@ encryption:
   dataKeyRotationPeriod: 168h
   kms:
     keyID: ""
-    vendor: gcp_v2
+    region: ""
 
 # Format: gke-tikv-<cluster_key>
 serviceAccountName: gke-tikv-<REGION>-1

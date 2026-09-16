@@ -1,10 +1,10 @@
 apiVersion: core.pingcap.com/v1alpha1
-kind: PDGroup
+kind: TiKVGroup
 metadata:
-  name: pd
+  name: tikv
   labels:
-    pingcap.com/group: pd
-    pingcap.com/component: pd
+    pingcap.com/group: tikv
+    pingcap.com/component: tikv
     pingcap.com/cluster: sdb-datastore
 spec:
   cluster:
@@ -15,28 +15,24 @@ spec:
       version: v8.5.8
       resources:
         cpu: 500m
-        memory: 1Gi
+        memory: 3Gi
       volumes:
       - name: data
-        storage: 1Gi
-        storageClassName: premium-rwo
+        storage: 10Gi
+        # storageClassName: premium-rwo
         mounts:
         - type: data
       config: |
-        [replication]
-          location-labels = ["topology.kubernetes.io/zone", "kubernetes.io/hostname"]
-          max-replicas = 3
       overlay:
         pod:
           spec:
             nodeSelector:
-              dedicated: pd
-            serviceAccountName: {{ .Values.serviceAccountName | quote }}
+              dedicated: tikv
             tolerations:
             - effect: NoSchedule
               key: dedicated
               operator: Equal
-              value: pd
+              value: tikv
             topologySpreadConstraints:
             - topologyKey: topology.kubernetes.io/zone
               maxSkew: 1

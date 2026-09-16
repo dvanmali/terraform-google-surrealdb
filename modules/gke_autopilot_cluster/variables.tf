@@ -16,16 +16,15 @@ variable "enable_workload_identity" {
 
 variable "encryption_at_rest" {
   type = object({
-    enabled                  = optional(bool, false)
-    key_ring_name            = optional(string, "surrealdb-encryption")
-    key_name                 = optional(string, "surrealdb-data")
-    service_account_id       = optional(string, "surrealdb-encryption")
-    kubernetes_namespace     = optional(string, "surreal-cluster")
-    pd_service_account       = optional(string)
-    tikv_service_account     = optional(string)
-    data_encryption_method   = optional(string, "aes256-ctr")
-    data_key_rotation_period = optional(string, "168h")
-    kms_rotation_period      = optional(string, "2592000s")
+    enabled                    = optional(bool, false)
+    key_ring_name              = optional(string, "sdb-encrypt")
+    key_name                   = optional(string, "sdb-storage")
+    service_account_id         = optional(string, "sdb-encrypt")
+    kubernetes_namespace       = optional(string, "surreal-cluster")
+    pd_service_account         = optional(string)
+    tikv_service_account       = optional(string)
+    kms_rotation_period        = optional(string, "2592000s")
+    destroy_scheduled_duration = optional(string, "86400s")
   })
   description = "Opt-in TiKV and PD encryption-at-rest configuration backed by Google Cloud KMS."
   default     = {}

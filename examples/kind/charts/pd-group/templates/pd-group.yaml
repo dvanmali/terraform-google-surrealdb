@@ -19,7 +19,7 @@ spec:
       volumes:
       - name: data
         storage: 1Gi
-        storageClassName: premium-rwo
+        # storageClassName: premium-rwo
         mounts:
         - type: data
       config: |
@@ -31,7 +31,6 @@ spec:
           spec:
             nodeSelector:
               dedicated: pd
-            serviceAccountName: {{ .Values.serviceAccountName | quote }}
             tolerations:
             - effect: NoSchedule
               key: dedicated
