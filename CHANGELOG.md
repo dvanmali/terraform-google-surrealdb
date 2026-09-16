@@ -9,6 +9,12 @@ All notable changes to this project are documented here.
 - TiDB operator support has been upgraded to v2.0.0. This is incompatible with the v1 operator manifests and deployments must be recreated or migrated to the v2 CRDs and chart configuration.
 - VPC subnet names now include the cluster name and are incompatable with v1.
 - `max_rate_per_endpoint` defaults to more reasonable value 100. Update value to better match your load.
+- Jump hosts are now disabled by default. Set `enable_jump_host = true` to retain jump-host resources and IAP access.
+
+### Added
+
+- Enabled private GKE control-plane DNS endpoint access by default for kubectl and Helm operations from the VPC. See [New Control Plane Access Announcement](https://cloud.google.com/blog/products/containers-kubernetes/new-dns-based-endpoint-for-the-gke-control-plane).
+- Added `enable_ip_access`, disabled by default, to explicitly control GKE control-plane IP endpoint access.
 
 ### Changed
 

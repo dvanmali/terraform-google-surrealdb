@@ -30,6 +30,13 @@ resource "google_container_cluster" "surreal" {
   location            = google_compute_subnetwork.subnet.region
   deletion_protection = var.deletion_protection
 
+  lifecycle {
+    precondition {
+      condition     = var.enable_dns_access || var.enable_ip_access
+      error_message = "At least one GKE control-plane endpoint must be enabled. Set enable_dns_access or enable_ip_access to true."
+    }
+  }
+
   network    = var.vpc
   subnetwork = google_compute_subnetwork.subnet.name
 
@@ -48,6 +55,23 @@ resource "google_container_cluster" "surreal" {
     enable_private_nodes    = true
     enable_private_endpoint = true
     master_ipv4_cidr_block  = var.master_ipv4_cidr_block
+  }
+
+  dynamic "control_plane_endpoints_config" {
+    for_each = [1]
+    content {
+      dynamic "dns_endpoint_config" {
+        for_each = var.enable_dns_access ? [1] : []
+        content {
+          allow_external_traffic    = true
+          enable_k8s_certs_via_dns  = true
+          enable_k8s_tokens_via_dns = true
+        }
+      }
+      ip_endpoints_config {
+        enabled = var.enable_ip_access
+      }
+    }
   }
 
   cluster_autoscaling {

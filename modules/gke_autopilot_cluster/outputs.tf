@@ -1,5 +1,5 @@
 output "surrealdb_jump_host" {
-  value       = google_compute_instance.jump_host.name
+  value       = var.enable_jump_host ? google_compute_instance.jump_host[0].name : null
   description = "Jump host to perform kubectl and helm commands"
 }
 

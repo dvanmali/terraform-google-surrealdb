@@ -14,6 +14,24 @@ variable "enable_workload_identity" {
   default     = true
 }
 
+variable "enable_dns_access" {
+  type        = bool
+  description = "Enable access to the private GKE control plane through its DNS endpoint"
+  default     = true
+}
+
+variable "enable_ip_access" {
+  type        = bool
+  description = "Enable access to the GKE control plane through its IP endpoint"
+  default     = false
+}
+
+variable "enable_jump_host" {
+  type        = bool
+  description = "Create a jump host for access to the private GKE control plane"
+  default     = false
+}
+
 variable "encryption_at_rest" {
   type = object({
     enabled                    = optional(bool, false)
@@ -128,6 +146,7 @@ variable "jump_host_os" {
 
 variable "jump_host_service_account_email" {
   type        = string
+  nullable    = true
   description = "Jump Host Service account"
 }
 

@@ -43,57 +43,25 @@ terraform plan -out=basic.tfplan
 terraform apply basic.tfplan
 ```
 
-## Setup Jump Host
+## Access the Private GKE Control Plane
 
-To reach our private GKE control plane, we install tiny proxy which proxies our aliased kubctl and helm commands.
+1. Add your cluster credentials
 
-1. For all the SurrealDB jump host instances, deploy tiny proxy
-```bash
-gcloud compute instances list
-# export INSTANCE=surrealdb-* listed (associated to region)
-gcloud compute ssh $INSTANCE --tunnel-through-iap
-```
-
-2. Inside jump host shell
-```bash
-sudo apt install tinyproxy
-sudo vi /etc/tinyproxy/tinyproxy.conf
-# Add localhost to the Allow section using ‘i’ and ‘:wq’ to exit
-sudo service tinyproxy restart
-exit
-```
-
-2. Get cluster credentials
 ```bash
 gcloud container clusters list
-# export CLUSTER = surrealdb-* listed (associated to location)
+# export CLUSTER=surrealdb-* cluster and its location
+# export LOCATION= location of the cluster
 gcloud container clusters get-credentials $CLUSTER \
-  --location $LOCATION
+  --location $LOCATION \
+  --dns-endpoint
 ```
 
-4. Connect to the server in the background.
-```bash
-gcloud compute ssh $INSTANCE --tunnel-through-iap \
-  --ssh-flag="-4 -L8888:localhost:8888 -N -q"
-```
+2. Check connection to the cluster.
 
-5. Open a new terminal and set up the environment.
 ```bash
-# Prevents us from retyping the proxy variable on each subsequent line
-alias k="HTTPS_PROXY=localhost:8888 kubectl"
-alias h="HTTPS_PROXY=localhost:8888 helm"
-# Verify cluster instance is correctly setup
+alias k="kubectl"
+alias h="helm"
 k get ns
-```
-```text
-NAME                       STATUS   AGE
-default                    Active   9m
-gke-gmp-system             Active   8m
-gke-managed-*              Active   8m
-gmp-public                 Active   8m
-kube-node-lease            Active   8m
-kube-public                Active   8m
-kube-system                Active   8m
 ```
 
 ## Encryption at Rest
@@ -126,8 +94,11 @@ The charts use `gcp_v2` and application default credentials from Workload Identi
 
 To rotate the master key, configure the new and previous KMS keys in the TiKV and PD configuration and perform a rolling restart. Keep the previous key available until all existing data has been re-encrypted.
 
+> [!IMPORTANT]
+> PD does not yet have encryption. PD encryption is both considered experimental and unsupported via `gcp_v2`.
+
 > [!WARNING]
-> Note: terraform will create a KMS key ring for master-key encryption. It may take a day (ie `destroy_scheduled_duration`) to fully delete the key ring. If you wish to respin the terraform, we recommend changing the `key_ring_name` to avoid "conflicting name" issues unless the key ring is fully deleted.
+> Terraform will create a KMS key ring for master-key encryption. It may take a day (ie `destroy_scheduled_duration`) to fully delete the key ring. If you wish to respin the terraform, we recommend changing the `key_ring_name` to avoid "conflicting name" issues unless the key ring is fully deleted.
 
 ## Deploy TiDB Operator
 

@@ -1,5 +1,6 @@
 # Jump Host Service Account and Permissions
 resource "google_service_account" "jump_host" {
+  count       = var.enable_jump_host ? 1 : 0
   account_id  = "gce-surrealdb-jump-host"
   description = "SurrealDB Jump Host Service Account attached to Compute Engine Instance"
 }
@@ -11,6 +12,7 @@ resource "google_service_account" "jump_host" {
 # }
 
 resource "google_compute_firewall" "iap_jump_host_rules" {
+  count   = var.enable_jump_host ? 1 : 0
   name    = "iap-surrealdb-jump-host-allow-ingress"
   network = data.google_compute_network.vpc.name
 
@@ -19,12 +21,12 @@ resource "google_compute_firewall" "iap_jump_host_rules" {
     protocol = "tcp"
     ports    = ["22"]
   }
-  target_service_accounts = [google_service_account.jump_host.email]
+  target_service_accounts = [google_service_account.jump_host[0].email]
   source_ranges           = ["35.235.240.0/20"]
 }
 
 resource "google_iap_tunnel_iam_binding" "jump_host_tunnel" {
-  for_each = var.jump_host_iap
+  for_each = var.enable_jump_host ? var.jump_host_iap : {}
   role     = "roles/iap.tunnelResourceAccessor"
   members = each.value.members != null ? each.value.members : [
     "projectOwner:${var.project_id}"

@@ -1,5 +1,5 @@
 encryption:
-  enabled: false
+  enabled: true
   dataEncryptionMethod: aes256-ctr
   dataKeyRotationPeriod: 168h
   kms:

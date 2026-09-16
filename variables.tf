@@ -78,6 +78,24 @@ variable "jump_host_iap" {
   }
 }
 
+variable "enable_jump_host" {
+  type        = bool
+  description = "Create jump hosts for access to private GKE control planes"
+  default     = false
+}
+
+variable "enable_ip_access" {
+  type        = bool
+  description = "Enable access to GKE control planes through their IP endpoints"
+  default     = false
+}
+
+variable "enable_dns_access" {
+  type        = bool
+  description = "Enable access to GKE control planes through their DNS endpoints"
+  default     = true
+}
+
 variable "gke_clusters" {
   type = map(object({
     region                        = string
@@ -94,14 +112,14 @@ variable "gke_clusters" {
     daily_maintenance_policy      = optional(string)      # Deprecated alias for daily_maintenance_start_time
     cluster_service_account_email = optional(string)
     encryption_at_rest = optional(object({
-      enabled                  = optional(bool, false)
-      key_ring_name            = optional(string, "sdb-encrypt")
-      key_name                 = optional(string, "sdb-storage")
-      service_account_id       = optional(string, "sdb-encrypt")
-      kubernetes_namespace     = optional(string, "surreal-cluster")
-      pd_service_account       = optional(string)
-      tikv_service_account     = optional(string)
-      kms_rotation_period      = optional(string, "2592000s")
+      enabled              = optional(bool, false)
+      key_ring_name        = optional(string, "sdb-encrypt")
+      key_name             = optional(string, "sdb-storage")
+      service_account_id   = optional(string, "sdb-encrypt")
+      kubernetes_namespace = optional(string, "surreal-cluster")
+      pd_service_account   = optional(string)
+      tikv_service_account = optional(string)
+      kms_rotation_period  = optional(string, "2592000s")
     }), {})
   }))
   description = "Map of all clusters to deploy"

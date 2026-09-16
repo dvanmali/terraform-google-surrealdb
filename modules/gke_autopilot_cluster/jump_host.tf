@@ -1,5 +1,6 @@
 # Jump Host used to access the private GKE control plane
 resource "google_compute_address" "gke_control_plane_jump_host" {
+  count        = var.enable_jump_host ? 1 : 0
   name         = "${google_container_cluster.surreal.name}-jump-host-ip"
   address_type = "INTERNAL"
   region       = google_compute_subnetwork.subnet.region
@@ -9,6 +10,7 @@ resource "google_compute_address" "gke_control_plane_jump_host" {
 }
 
 resource "google_compute_instance" "jump_host" {
+  count        = var.enable_jump_host ? 1 : 0
   name         = "${google_container_cluster.surreal.name}-jump-host"
   machine_type = var.jump_host_machine
   zone         = "${google_compute_subnetwork.subnet.region}-${var.jump_host_zone}"
@@ -25,7 +27,7 @@ resource "google_compute_instance" "jump_host" {
   network_interface {
     network    = var.vpc
     subnetwork = google_compute_subnetwork.subnet.name
-    network_ip = google_compute_address.gke_control_plane_jump_host.address
+    network_ip = google_compute_address.gke_control_plane_jump_host[0].address
   }
   boot_disk {
     initialize_params {

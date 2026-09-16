@@ -22,6 +22,9 @@ module "gke_clusters" {
   deletion_protection    = each.value.deletion_protection
   enable_autopilot       = each.value.enable_autopilot
   enable_backup          = each.value.enable_backup
+  enable_dns_access      = var.enable_dns_access
+  enable_ip_access       = var.enable_ip_access
+  enable_jump_host       = var.enable_jump_host
   daily_maintenance_start_time = coalesce(
     each.value.daily_maintenance_start_time,
     each.value.daily_maintenance_policy,
@@ -35,7 +38,7 @@ module "gke_clusters" {
   jump_host_zone                  = each.value.jump_host_zone
   jump_host_machine               = var.jump_host_machine
   jump_host_os                    = var.jump_host_os
-  jump_host_service_account_email = google_service_account.jump_host.email
+  jump_host_service_account_email = var.enable_jump_host ? google_service_account.jump_host[0].email : null
 
   providers = {
     google = google

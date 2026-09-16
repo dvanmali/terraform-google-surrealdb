@@ -58,7 +58,7 @@ Each example is configured for a different type of setup.
 
 - [Kind Local Deployment](./examples/kind/) - Local kind cluster deployment 
 - [Basic Deployment](./examples/basic/) - A one-replica Autopilot setup
-- [Production Deployment](./examples/prod-auto/) - Minimal production Autopilot setup
+- [Production Deployment](./examples/prod-auto/) - Minimum production Autopilot setup
 
 Follow the specific example's instructions at this point. In general, terraform could be applied using the following basic commands.
 
@@ -67,7 +67,7 @@ Follow the specific example's instructions at this point. In general, terraform 
 terraform init
 ```
 
-2. Apply your with your configurations.
+2. Apply with your configurations.
 ```bash
 terraform apply -var-file prod.tfvars
 ```
@@ -106,7 +106,63 @@ Multiple regional Google Autopilot clusters are to create a SurrealDB cluster ex
 
 ### Jump Host
 
-The jump host enables secure Identity Aware Proxy (IAP) tunnel access to both the VPC and the GKE control plane to perform kubectl and helm actions for deployments.
+The private GKE control plane supports two access methods: DNS access (default) and via a VM connected in the VPC, such as through Cloud VPN or Interconnect.
+
+The DNS is the new recommended approach as the control plane is still private and access is controlled through IAM policies (eg `container.clusters.connect`).
+
+```bash
+gcloud container clusters list
+# export CLUSTER=surrealdb-* listed (associated to location)
+gcloud container clusters get-credentials $CLUSTER \
+	--location $LOCATION \
+	--dns-endpoint
+kubectl get ns
+```
+
+IP endpoint access is disabled by default. Set `enable_ip_access = true` to enable it.
+
+To use an Identity-Aware Proxy (IAP) tunnel instead, set `enable_jump_host = true`, then connect to the jump host and proxy kubectl and helm traffic through it. The jump host is a spot virtual machine in the same region and is disabled by default:
+
+```hcl
+enable_jump_host = true
+```
+
+1. Deploy Tinyproxy on the jump host:
+
+```bash
+gcloud compute instances list
+# export INSTANCE=surrealdb-* listed (associated to region)
+gcloud compute ssh $INSTANCE --tunnel-through-iap
+sudo apt install tinyproxy
+sudo vi /etc/tinyproxy/tinyproxy.conf
+# Add localhost to the Allow section, then save and exit.
+sudo service tinyproxy restart
+exit
+```
+
+2. Get cluster credentials:
+
+```bash
+gcloud container clusters list
+# export CLUSTER=surrealdb-* listed (associated to location)
+gcloud container clusters get-credentials $CLUSTER \
+	--location $LOCATION
+```
+
+3. Start the local tunnel:
+
+```bash
+gcloud compute ssh $INSTANCE --tunnel-through-iap \
+	--ssh-flag="-4 -L8888:localhost:8888 -N -q"
+```
+
+4. In a new terminal, configure kubectl and Helm to use the proxy:
+
+```bash
+alias k="HTTPS_PROXY=localhost:8888 kubectl"
+alias h="HTTPS_PROXY=localhost:8888 helm"
+k get ns
+```
 
 ## Authors
 [Dylan Vanmali](https://github.com/dvanmali)
