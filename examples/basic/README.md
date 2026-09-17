@@ -194,6 +194,26 @@ surrealdb   1/1     1            1           9m29s
 
 It is recommended to change the root user of the deployment.
 
+### DNS Endpoint
+
+1. Connect using the Surreal CLI, don't save history.
+
+```bash
+surreal sql -u root -p root -e https://$DOMAIN
+```
+
+2. Run the following SurrealQL. Exit with CTRL+C.
+
+```surrealql
+DEFINE USER newadmin
+  ON ROOT
+  PASSWORD 'NEW_PASSWORD'
+  ROLES OWNER;
+REMOVE USER root ON ROOT;
+```
+
+### Jump Host
+
 1. Exit the previously-opened jump host connection.
 
 2. Open a connection to the frontend to connect to the admin portal in the VPC. Note these flags are different because routes are dynamic instead of targeting the localhost.
@@ -212,6 +232,20 @@ gcloud compute ssh $INSTANCE \
 ```
 
 ## Clean up
+
+### Helm chart
+
+Clean up of the Kubernetes environment can be quickly performed via helm.
+
+```bash
+h uninstall surrealdb -n surreal-cluster
+h uninstall cluster -n surreal-cluster
+h uninstall pd-group -n surreal-cluster
+h uninstall tikv-group -n surreal-cluster
+k delete deployment tidb-operator -n tidb-admin
+```
+
+### Terraform
 
 Clean up is simple with Terraform. If deletion_protection is true, remember to set to false by first applying those terraform changes then proceeding with the following command.
 

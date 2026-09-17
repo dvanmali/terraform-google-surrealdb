@@ -10,7 +10,7 @@ A Google Kubernetes Engine Terraform deployment served on a HTTPS endpoint.
 
 # GCP Setup
 
-The following instructions are required for all terraform deployments:
+The following instructions are required for all [example](#examples) terraform deployments:
 
 ## DNS
 
@@ -56,9 +56,9 @@ $ gcloud compute networks create $VPC_NAME --subnet-mode=custom --enable-ula-int
 
 Each example is configured for a different type of setup.
 
-- [Kind Local Deployment](./examples/kind/) - Local kind cluster deployment 
 - [Basic Deployment](./examples/basic/) - A one-replica Autopilot setup
 - [Production Deployment](./examples/prod-auto/) - Minimum production Autopilot setup
+- [Kind Local Deployment](./examples/kind/) - Local kind (non-terraform) cluster deployment 
 
 Follow the specific example's instructions at this point. In general, terraform could be applied using the following basic commands.
 
