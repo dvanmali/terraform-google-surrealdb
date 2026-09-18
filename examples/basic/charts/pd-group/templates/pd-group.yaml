@@ -26,17 +26,33 @@ spec:
         [replication]
           location-labels = ["topology.kubernetes.io/zone", "kubernetes.io/hostname"]
           max-replicas = 3
+      {{- if .Values.tls.enabled }}
+        [security]
+          cert-allowed-cn = ["surrealdb", "cluster", "pd", "tikv"]
+      {{- end }}
       overlay:
         pod:
           spec:
-            nodeSelector:
-              dedicated: pd
+            # {{- if .Values.tls.enabled }}
+            # volumes:
+            # - name: pd-tls
+            #   secret:
+            #     secretName: pd-pd-cluster-secret
+            # containers:
+            # - name: pd
+            #   volumeMounts:
+            #   - name: pd-tls
+            #     mountPath: /etc/pd-tls
+            #     readOnly: true
+            # {{- end }}
+            # nodeSelector:
+            #   dedicated: pd
             serviceAccountName: {{ .Values.serviceAccountName | quote }}
-            tolerations:
-            - effect: NoSchedule
-              key: dedicated
-              operator: Equal
-              value: pd
+            # tolerations:
+            # - effect: NoSchedule
+            #   key: dedicated
+            #   operator: Equal
+            #   value: pd
             topologySpreadConstraints:
             - topologyKey: topology.kubernetes.io/zone
               maxSkew: 1

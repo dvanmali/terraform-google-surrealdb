@@ -11,7 +11,7 @@ terraform {
 # One backend service aggregates the zonal NEGs from every cluster.
 resource "google_compute_backend_service" "external" {
   name                  = "surrealdb-external-backend-service"
-  protocol              = "HTTP"
+  protocol              = var.enable_tls ? "HTTPS" : "HTTP"
   load_balancing_scheme = "EXTERNAL_MANAGED"
   health_checks         = var.health_checks
 

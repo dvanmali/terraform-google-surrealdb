@@ -32,29 +32,27 @@ resource "google_compute_firewall" "fw_backends" {
   }
 }
 
-# resource "google_compute_health_check" "https-health-check" {
-#   name = "surrealdb-https-health-check"
-
-#   timeout_sec         = 1
-#   check_interval_sec  = 1
-#   healthy_threshold   = 1
-#   unhealthy_threshold = 2
-
-#   https_health_check {
-#     port = "443"
-#   }
-# }
-
-resource "google_compute_health_check" "http-health-check" {
-  name = "surrealdb-http-health-check"
+resource "google_compute_health_check" "surrealdb" {
+  name = var.enable_tls ? "surrealdb-https-health-check" : "surrealdb-http-health-check"
 
   timeout_sec         = 1
   check_interval_sec  = 1
   healthy_threshold   = 1
   unhealthy_threshold = 2
 
-  http_health_check {
-    request_path = "/health"
-    port         = "8080"
+  dynamic "https_health_check" {
+    for_each = var.enable_tls ? [true] : []
+    content {
+      request_path = "/health"
+      port         = "443"
+    }
+  }
+
+  dynamic "http_health_check" {
+    for_each = var.enable_tls ? [] : [true]
+    content {
+      request_path = "/health"
+      port         = "8080"
+    }
   }
 }

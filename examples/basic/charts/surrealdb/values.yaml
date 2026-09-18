@@ -19,21 +19,32 @@ surrealdb:
   auth: true
   initial_user: "root"
   initial_pass: "root"
-  # For kind locally, use 8080
-  port: 8080
-  # You can specify a custom service account name here (e.g., gke-surreal-prod, gke-surrealdb-<CLUSTER_NAME>)
+  port: 443
+  # You can specify a custom service account name here (e.g., gke-sdb-prod, gke-sdb-<CLUSTER_NAME>)
   # @see - serviceAccount.serviceAccountName
-  serviceAccountName: gke-surrealdb-<REGION>-1
+  serviceAccountName: gke-sdb-<REGION>-1
 
 strategy:
   type: RollingUpdate
 
 serviceAccount:
   create: true
-  serviceAccountName: gke-surrealdb-<REGION>-1
-  annotations: {}
+  serviceAccountName: gke-sdb-<REGION>-1
+  annotations:
+    iam.gke.io/gcp-service-account: gke-sdb-<REGION>-1@<PROJECT_ID>.iam.gserviceaccount.com
 
-podExtraEnv: []
+podExtraEnv:
+  - name: SURREAL_TIKV_TLS_CA_PATH
+    value: /etc/surrealdb/kvs-tls/ca.crt
+  - name: SURREAL_TIKV_TLS_CERT_PATH
+    value: /etc/surrealdb/kvs-tls/tls.crt
+  - name: SURREAL_TIKV_TLS_KEY_PATH
+    value: /etc/surrealdb/kvs-tls/tls.key
+  - name: SURREAL_WEB_CRT
+    value: /etc/surrealdb/web-tls/tls.crt
+  - name: SURREAL_WEB_KEY
+    value: /etc/surrealdb/web-tls/tls.key
+
 podAnnotations: {}
 podSecurityContext: {}
 securityContext: {}
@@ -42,13 +53,12 @@ extraContainers: []
 
 service:
   type: NodePort
-  # For kind locally, use 8080
-  port: 8080
+  port: 443
   selector:
     app: surrealdb
   annotations:
     # Format: cloud.google.com/neg: '{"exposed_ports": {"<PORT>": {"name": "surrealdb-<CLUSTER_NAME>-neg"}}}'
-    cloud.google.com/neg: '{"exposed_ports": {"8080": {"name": "surrealdb-<REGION>-1-neg"}}}'
+    cloud.google.com/neg: '{"exposed_ports": {"443": {"name": "surrealdb-<REGION>-1-neg"}}}'
 
 ingress:
   enabled: false
@@ -70,8 +80,20 @@ horizontalPodAutoscaler:
 nodeSelector: {}
 tolerations: []
 affinity: {}
-volumes: []
-volumeMounts: []
+volumes:
+  - name: kvs-tls
+    secret:
+      secretName: sdb-kvs-secret
+  - name: web-tls
+    secret:
+      secretName: sdb-web-secret
+volumeMounts:
+  - name: kvs-tls
+    mountPath: /etc/surrealdb/kvs-tls
+    readOnly: true
+  - name: web-tls
+    mountPath: /etc/surrealdb/web-tls
+    readOnly: true
 
 persistence:
   enabled: false
@@ -80,10 +102,12 @@ livenessProbe:
   httpGet:
     path: /health
     port: http
+    scheme: HTTPS
   timeoutSeconds: 5
 
 readinessProbe:
   httpGet:
     path: /ready
+    scheme: HTTPS
     port: http
   timeoutSeconds: 5

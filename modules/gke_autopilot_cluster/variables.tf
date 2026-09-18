@@ -26,6 +26,12 @@ variable "enable_ip_access" {
   default     = false
 }
 
+variable "enable_tls" {
+  type        = bool
+  description = "Enable TLS for the SurrealDB load balancer backend"
+  default     = true
+}
+
 variable "enable_jump_host" {
   type        = bool
   description = "Create a jump host for access to the private GKE control plane"

@@ -1,0 +1,138 @@
+{{- if .Values.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: sdb-root-ca
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sdb-tls-ca
+spec:
+  secretName: sdb-tls-ca-secret
+  commonName: "surrealdb CA"
+  isCA: true
+  issuerRef:
+    name: sdb-root-ca
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: sdb-tls-ca
+spec:
+  ca:
+    secretName: sdb-tls-ca-secret
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sdb-datastore-cluster-client
+spec:
+  secretName: sdb-datastore-cluster-client-secret
+  duration: 8760h
+  renewBefore: 360h
+  commonName: "cluster"
+  usages:
+  - client auth
+  issuerRef:
+    name: sdb-tls-ca
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pd-pd-cluster
+spec:
+  secretName: pd-pd-cluster-secret
+  duration: 8760h
+  renewBefore: 360h
+  commonName: "pd"
+  usages:
+  - server auth
+  - client auth
+  dnsNames:
+  - pd-pd
+  - pd-pd.surreal-cluster
+  - pd-pd.surreal-cluster.svc
+  - pd-pd-peer
+  - pd-pd-peer.surreal-cluster
+  - pd-pd-peer.surreal-cluster.svc
+  - '*.pd-pd-peer'
+  - '*.pd-pd-peer.surreal-cluster'
+  - '*.pd-pd-peer.surreal-cluster.svc'
+  ipAddresses:
+    - 127.0.0.1
+    - ::1
+  issuerRef:
+    name: sdb-tls-ca
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sdb-web
+spec:
+  secretName: sdb-web-secret
+  duration: 8760h
+  renewBefore: 360h
+  commonName: "surrealdb"
+  usages:
+  - server auth
+  dnsNames:
+  - surrealdb
+  - surrealdb.surreal-cluster
+  - surrealdb.surreal-cluster.svc
+  - '*.surrealdb'
+  - '*.surrealdb.surreal-cluster'
+  - '*.surrealdb.surreal-cluster.svc'
+  issuerRef:
+    name: sdb-tls-ca
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sdb-kvs
+spec:
+  secretName: sdb-kvs-secret
+  duration: 8760h
+  renewBefore: 360h
+  commonName: "surrealdb"
+  usages:
+  - client auth
+  issuerRef:
+    name: sdb-tls-ca
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tikv-tikv-cluster
+spec:
+  secretName: tikv-tikv-cluster-secret
+  duration: 8760h
+  renewBefore: 360h
+  commonName: "tikv"
+  usages:
+  - server auth
+  - client auth
+  dnsNames:
+  - tikv-tikv
+  - tikv-tikv.surreal-cluster
+  - tikv-tikv.surreal-cluster.svc
+  - tikv-tikv-peer
+  - tikv-tikv-peer.surreal-cluster
+  - tikv-tikv-peer.surreal-cluster.svc
+  - '*.tikv-tikv-peer'
+  - '*.tikv-tikv-peer.surreal-cluster'
+  - '*.tikv-tikv-peer.surreal-cluster.svc'
+  ipAddresses:
+    - 127.0.0.1
+    - ::1
+  issuerRef:
+    name: sdb-tls-ca
+    kind: Issuer
+{{- end }}

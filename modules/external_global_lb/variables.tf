@@ -4,6 +4,11 @@ variable "dns_public" {
   default     = "surrealdb"
 }
 
+variable "enable_tls" {
+  type        = bool
+  description = "Enable TLS from load balancer backends to SurrealDB"
+}
+
 variable "balancing_mode" {
   type        = string
   description = "Backend balancing mode used for all load balancer backends. NEGs support RATE or CONNECTION; UTILIZATION is not supported."

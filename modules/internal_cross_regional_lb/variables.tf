@@ -4,6 +4,12 @@ variable "dns_public" {
   default     = "surrealdb"
 }
 
+variable "enable_tls" {
+  type        = bool
+  description = "Enable TLS from load balancer backends to SurrealDB"
+  default     = true
+}
+
 variable "dns_private" {
   type        = string
   description = "(Optional) Name for the private DNS zone to be created"

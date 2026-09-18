@@ -15,6 +15,7 @@ All notable changes to this project are documented here.
 
 - Enabled private GKE control-plane DNS endpoint access by default for kubectl and Helm operations from the VPC. See [New Control Plane Access Announcement](https://cloud.google.com/blog/products/containers-kubernetes/new-dns-based-endpoint-for-the-gke-control-plane).
 - Added `enable_ip_access`, disabled by default, to explicitly control GKE control-plane IP endpoint access.
+- Added `enable_tls`, enabled by default, to control TLS between load balancer backends and SurrealDB.
 
 ### Changed
 

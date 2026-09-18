@@ -23,6 +23,10 @@ spec:
         mounts:
         - type: data
       config: |
+      {{- if .Values.tls.enabled }}
+        [security]
+          cert-allowed-cn = ["cluster", "pd", "tikv"]
+      {{- end }}
       {{- if .Values.encryption.enabled }}
         [security.encryption]
           data-encryption-method = "{{ .Values.encryption.dataEncryptionMethod | default "aes256-ctr" }}"
@@ -37,14 +41,27 @@ spec:
       overlay:
         pod:
           spec:
-            nodeSelector:
-              dedicated: tikv
+            # {{- if .Values.tls.enabled }}
+            # volumes:
+            # - name: tikv-tls
+            #   secret:
+            #     secretName: tikv-tikv-cluster-secret
+            # containers:
+            # - name: tikv
+            #   volumeMounts:
+            #   - name: tikv-tls
+            #     mountPath: /etc/tikv-tls
+            #     readOnly: true
+            # {{- end }}
+            terminationGracePeriodSeconds: 600
+            # nodeSelector:
+            #   dedicated: tikv
             serviceAccountName: {{ .Values.serviceAccountName | quote }}
-            tolerations:
-            - effect: NoSchedule
-              key: dedicated
-              operator: Equal
-              value: tikv
+            # tolerations:
+            # - effect: NoSchedule
+            #   key: dedicated
+            #   operator: Equal
+            #   value: tikv
             topologySpreadConstraints:
             - topologyKey: topology.kubernetes.io/zone
               maxSkew: 1

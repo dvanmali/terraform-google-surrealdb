@@ -1,3 +1,6 @@
+tls:
+  enabled: true
+
 encryption:
   enabled: true
   dataEncryptionMethod: aes256-ctr

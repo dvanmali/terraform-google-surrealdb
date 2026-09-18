@@ -25,6 +25,7 @@ module "gke_clusters" {
   enable_dns_access      = var.enable_dns_access
   enable_ip_access       = var.enable_ip_access
   enable_jump_host       = var.enable_jump_host
+  enable_tls             = var.enable_tls
   daily_maintenance_start_time = coalesce(
     each.value.daily_maintenance_start_time,
     each.value.daily_maintenance_policy,
@@ -50,7 +51,8 @@ module "external_global_lb" {
   source = "./modules/external_global_lb"
 
   gke_clusters          = module.gke_clusters
-  health_checks         = [google_compute_health_check.http-health-check.id]
+  enable_tls            = var.enable_tls
+  health_checks         = [google_compute_health_check.surrealdb.id]
   dns_public            = var.dns_public
   balancing_mode        = var.balancing_mode
   max_utilization       = var.max_utilization
@@ -66,7 +68,8 @@ module "internal_cross_regional_lb" {
   source = "./modules/internal_cross_regional_lb"
 
   gke_clusters  = module.gke_clusters
-  health_checks = [google_compute_health_check.http-health-check.id]
+  enable_tls    = var.enable_tls
+  health_checks = [google_compute_health_check.surrealdb.id]
   vpc           = data.google_compute_network.vpc.name
 
   dns_public            = var.dns_public

@@ -15,7 +15,7 @@ data "google_compute_network" "vpc" {
 # One backend service aggregates the zonal NEGs from every cluster.
 resource "google_compute_backend_service" "default" {
   name                  = "surrealdb-backend-service"
-  protocol              = "HTTP"
+  protocol              = var.enable_tls ? "HTTPS" : "HTTP"
   load_balancing_scheme = "INTERNAL_MANAGED"
   health_checks         = var.health_checks
 

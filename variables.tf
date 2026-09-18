@@ -20,6 +20,12 @@ variable "enable_internal_cross_regional_lb" {
   default     = true
 }
 
+variable "enable_tls" {
+  type        = bool
+  description = "Enable TLS from load balancer backends to SurrealDB"
+  default     = true
+}
+
 variable "dns_public" {
   type        = string
   description = "Name for the existing public DNS zone"

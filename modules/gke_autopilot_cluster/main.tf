@@ -24,7 +24,7 @@ resource "google_compute_subnetwork" "proxy_subnet" {
   role          = "ACTIVE"
 }
 
-# SurrealDB Private Regional Cluster
+# SurrealDB Regional Cluster
 resource "google_container_cluster" "surreal" {
   name                = "surrealdb-${var.key}"
   location            = google_compute_subnetwork.subnet.region
@@ -88,7 +88,6 @@ resource "google_container_cluster" "surreal" {
 
   master_authorized_networks_config {}
 
-
   maintenance_policy {
     daily_maintenance_window {
       start_time = var.daily_maintenance_start_time
@@ -103,7 +102,7 @@ resource "google_compute_network_endpoint_group" "neg" {
   name         = "surrealdb-${var.key}-neg"
   description  = "SurrealDB Zonal NEG"
   network      = var.vpc
-  default_port = 8080
+  default_port = var.enable_tls ? 443 : 8080
 
   subnetwork = google_compute_subnetwork.subnet.name
   zone       = each.value

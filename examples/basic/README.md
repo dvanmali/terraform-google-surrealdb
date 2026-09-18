@@ -12,11 +12,13 @@ To ensure this example works without error, ensure you have the Project Owner IA
 - External Load Balancer with an HTTPS endpoint (Google-managed SSL certificate)
 - NAT for cluster internet connectivity
 - Encryption at Rest Storage (with master-key KMS)
+- TLS encryption between TiDB components
 
 ### Prerequisites
 
 - [Helm v4](https://helm.sh/docs/intro/install/)
 - [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
+- [cert-manager](https://cert-manager.io/docs/installation/)
 
 # GCP Setup
 
@@ -73,6 +75,7 @@ Terraform creates a symmetric Google Cloud KMS key in the cluster's region and a
 Create the two annotated Kubernetes service accounts (apply to every cluster):
 
 ```bash
+# export REGION= location of the cluster
 CLUSTER_NAME="$REGION-1"
 KEY_NAME="${CLUSTER_NAME//-/_}"
 KMS_KEY_ID=$(terraform output -json --state ../../terraform.tfstate encryption_at_rest_key_ids | jq -r --arg cluster "$KEY_NAME" '.[$cluster]')
@@ -99,6 +102,30 @@ To rotate the master key, configure the new and previous KMS keys in the TiKV an
 
 > [!WARNING]
 > Terraform will create a KMS key ring for master-key encryption. It may take a day (ie `destroy_scheduled_duration`) to fully delete the key ring. If you wish to respin the terraform, we recommend changing the `key_ring_name` to avoid "conflicting name" issues unless the key ring is fully deleted.
+
+## Install cert-manager
+
+The cluster chart creates a self-signed CA and component certificates through cert-manager. Cert-manager is trusted within the namespace, not externally where the load balancer has a Google-Managed SSL certificate.
+
+Install cert-manager with bare-minimum resources before installing the TiDB Operator or the cluster chart:
+
+```bash
+h repo add jetstack https://charts.jetstack.io
+h repo update
+h upgrade --install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --set crds.enabled=true \
+  --set global.leaderElection.namespace=cert-manager \
+  --set resources.requests.cpu=50m \
+  --set resources.requests.memory=52Mi \
+  --set webhook.resources.requests.cpu=50m \
+  --set webhook.resources.requests.memory=52Mi \
+  --set cainjector.resources.requests.cpu=50m \
+  --set cainjector.resources.requests.memory=52Mi \
+  --set startupapicheck.resources.requests.cpu=50m \
+  --set startupapicheck.resources.requests.memory=52Mi
+```
 
 ## Deploy TiDB Operator
 
@@ -128,6 +155,20 @@ Now that we have the TiDB Operator running, it's time to define a TiKV Cluster a
 1. Install the cluster chart from the example directory.
 ```bash
 h upgrade --install cluster ./charts/cluster -n surreal-cluster --create-namespace
+```
+
+The cluster chart enables mutual TLS by default and creates the CA, cluster client, and PD/TiKV certificates. Disable it with `--set tls.enabled=false` on the cluster, PD, and TiKV chart installs. When enabled, wait for the certificates to become ready before installing the component groups:
+
+```bash
+k get certificates -n surreal-cluster
+```
+```text
+NAME                READY   SECRET                     AGE
+pd-pd-cluster       True    pd-pd-cluster-secret       10s
+sdb-tls-ca          True    sdb-tls-ca-secret          10s
+sdb-web             True    sdb-web-secret             10s
+surreal-tls         True    surreal-tls-secret         10s
+tikv-tikv-cluster   True    tikv-tikv-cluster-secret   10s
 ```
 
 2. Install the PD group chart.
@@ -169,7 +210,7 @@ tikv-tikv-xxx     1/1       Running   0          2m
 
 Now that we have a TiDB cluster running, we can deploy SurrealDB using the Helm chart included in this repository under [charts/surrealdb](./charts/surrealdb). The chart is configured to connect to the TiKV PD service and exposes the SurrealDB service through the GKE NEG.
 
-1. Copy the surrealdb values file locally. Replace the version and the placeholder in `cloud.google.com/neg` with your cluster name (for the example, replace "\<REGION\>").
+1. Copy the surrealdb values file locally. Replace the version and the placeholder in `cloud.google.com/neg` with your cluster name (for the example, replace "\<REGION\>") and the `iam.gke.io/gcp-service-account` with your workload identity service account (replace "\<PROJECT_ID\>").
 ```bash
 cp ./charts/surrealdb/values.example.yaml values.local.yaml
 ```
@@ -189,6 +230,8 @@ k get deployment -n surreal-cluster
 NAME        READY   UP-TO-DATE   AVAILABLE   AGE
 surrealdb   1/1     1            1           9m29s
 ```
+
+The values mount the `sdb-kvs-secret` certificate and set the `SURREAL_TIKV_TLS_CA_PATH`, `SURREAL_TIKV_TLS_CERT_PATH`, and `SURREAL_TIKV_TLS_KEY_PATH` variables so SurrealDB can connect securely to the TiKV-backed KVS. They also mount the `sdb-web-secret` certificate and set `SURREAL_WEB_CRT` and `SURREAL_WEB_KEY`, allowing the load balancers to use HTTPS to the SurrealDB NEG on port 443.
 
 ## Change Default Admin
 
@@ -243,6 +286,7 @@ h uninstall cluster -n surreal-cluster
 h uninstall pd-group -n surreal-cluster
 h uninstall tikv-group -n surreal-cluster
 k delete deployment tidb-operator -n tidb-admin
+h uninstall cert-manager -n cert-manager
 ```
 
 ### Terraform
