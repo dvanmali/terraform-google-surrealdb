@@ -102,6 +102,12 @@ variable "enable_dns_access" {
   default     = true
 }
 
+variable "monitoring_service_account_id" {
+  type        = string
+  description = "Account ID of the shared Google service account used for Prometheus monitoring across all clusters"
+  default     = "gke-monitoring-surreal"
+}
+
 variable "gke_clusters" {
   type = map(object({
     region                        = string
@@ -120,6 +126,11 @@ variable "gke_clusters" {
     daily_maintenance_start_time  = optional(string)      # Defaults to midnight (HH:MM)
     daily_maintenance_policy      = optional(string)      # Deprecated alias for daily_maintenance_start_time
     cluster_service_account_email = optional(string)
+    monitoring = optional(object({
+      enabled                    = optional(bool, false)
+      kubernetes_namespace       = optional(string, "surreal-cluster")
+      kubernetes_service_account = optional(string, "surrealdb-monitoring")
+    }), {})
     encryption_at_rest = optional(object({
       enabled              = optional(bool, false)
       key_ring_name        = optional(string, "sdb-encrypt")

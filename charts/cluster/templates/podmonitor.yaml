@@ -1,0 +1,38 @@
+{{- if eq .Values.enable_prometheus "self" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: sdb-datastore
+  labels:
+    monitor: tidb-cluster
+spec:
+  jobLabel: pingcap.com/component
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: tidb-operator
+      pingcap.com/cluster: sdb-datastore
+  podMetricsEndpoints:
+    - port: metrics
+      interval: {{ .Values.monitoring.interval | default "15s" }}
+      honorLabels: true
+      {{- if .Values.tls.enabled }}
+      scheme: https
+      tlsConfig:
+        ca:
+          secret:
+            name: sdb-datastore-cluster-client-secret
+            key: ca.crt
+        cert:
+          secret:
+            name: sdb-datastore-cluster-client-secret
+            key: tls.crt
+        keySecret:
+          name: sdb-datastore-cluster-client-secret
+          key: tls.key
+      {{- else }}
+      scheme: http
+      {{- end }}
+{{- end }}

@@ -1,6 +1,16 @@
 tls:
   enabled: true
+
 serviceAccount:
   create: false
   name: tidb-encryption
   annotations: {}
+
+enable_prometheus: managed
+monitoring:
+  interval: 15s
+  serviceAccount:
+    create: true
+    name: surrealdb-monitoring
+    annotations:
+      iam.gke.io/gcp-service-account: gke-monitoring-surreal@<PROJECT_ID>.iam.gserviceaccount.com

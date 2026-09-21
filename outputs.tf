@@ -13,7 +13,7 @@ output "encryption_at_rest_service_account_emails" {
   description = "Google service account emails used for PD and TiKV encryption at rest, keyed by GKE cluster name"
 }
 
-output "encryption_at_rest_service_account_email" {
-  value       = { for key, cluster in module.gke_clusters : key => cluster.encryption_at_rest_pd_service_account_email }
-  description = "Backward-compatible alias for the PD service account used for encryption at rest"
+output "monitoring_service_account_email" {
+  value       = local.monitoring_enabled ? google_service_account.monitoring[0].email : null
+  description = "Shared Google service account email used for Prometheus monitoring across all clusters"
 }

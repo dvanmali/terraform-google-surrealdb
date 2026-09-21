@@ -8,14 +8,17 @@ locals {
   # NOTE: All CIDR ranges can be changed, they are only provided as Quickstart
   gke_clusters = {
     "<REGION>-1" = {
-      region                       = "<REGION>"
-      vpc_subnet_ip                = "10.1.0.0/24"
-      proxy_subnet_ip_cidr         = "10.100.0.0/23"
-      node_zones                   = ["<REGION>-a", "<REGION>-b", "<REGION>-c"] # Use 'gcloud compute zones list'
-      master_ipv4_cidr_block       = "10.0.0.0/28"                              # CIDR block for the cluster control plane
-      deletion_protection          = true                                       # (Optional) default is true
-      enable_autopilot             = true
-      enable_managed_prometheus    = true
+      region                    = "<REGION>"
+      vpc_subnet_ip             = "10.1.0.0/24"
+      proxy_subnet_ip_cidr      = "10.100.0.0/23"
+      node_zones                = ["<REGION>-a", "<REGION>-b", "<REGION>-c"] # Use 'gcloud compute zones list'
+      master_ipv4_cidr_block    = "10.0.0.0/28"                              # CIDR block for the cluster control plane
+      deletion_protection       = true                                       # (Optional) default is true
+      enable_autopilot          = true
+      enable_managed_prometheus = true
+      monitoring = {
+        enabled = true
+      }
       enable_vertical_scaling      = true  # Enable vertical pod autoscaling
       disable_horizontal_scaling   = false # Keep horizontal pod autoscaling enabled
       enable_backup                = true  # (Recommended)

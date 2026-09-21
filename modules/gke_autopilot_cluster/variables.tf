@@ -123,6 +123,18 @@ variable "enable_managed_prometheus" {
   default     = true
 }
 
+variable "monitoring" {
+  type = object({
+    enabled                    = optional(bool, false)
+    service_account_email      = optional(string)
+    service_account_name       = optional(string)
+    kubernetes_namespace       = optional(string, "surreal-cluster")
+    kubernetes_service_account = optional(string, "surrealdb-monitoring")
+  })
+  description = "Google service account and Workload Identity configuration for Prometheus monitoring."
+  default     = {}
+}
+
 variable "enable_vertical_scaling" {
   type        = bool
   description = "Enable vertical pod autoscaling for the cluster"

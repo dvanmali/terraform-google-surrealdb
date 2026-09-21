@@ -1,0 +1,32 @@
+{{- if eq .Values.enable_prometheus "managed" }}
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: sdb-datastore
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: tidb-operator
+      pingcap.com/cluster: sdb-datastore
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.monitoring.interval | default "15s" }}
+      {{- if .Values.tls.enabled }}
+      scheme: https
+      tls:
+        ca:
+          secret:
+            name: sdb-datastore-cluster-client-secret
+            key: ca.crt
+        cert:
+          secret:
+            name: sdb-datastore-cluster-client-secret
+            key: tls.crt
+        key:
+          secret:
+            name: sdb-datastore-cluster-client-secret
+            key: tls.key
+      {{- else }}
+      scheme: http
+      {{- end }}
+{{- end }}

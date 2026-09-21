@@ -35,8 +35,12 @@ module "gke_clusters" {
     "00:00",
   )
   cluster_service_account_email = each.value.cluster_service_account_email
-  enable_workload_identity      = each.value.encryption_at_rest.enabled
+  enable_workload_identity      = each.value.encryption_at_rest.enabled || each.value.monitoring.enabled
   encryption_at_rest            = each.value.encryption_at_rest
+  monitoring = merge(each.value.monitoring, {
+    service_account_email = local.monitoring_enabled ? google_service_account.monitoring[0].email : null
+    service_account_name  = local.monitoring_enabled ? google_service_account.monitoring[0].name : null
+  })
 
   jump_host_ip                    = each.value.jump_host_ip
   jump_host_zone                  = each.value.jump_host_zone

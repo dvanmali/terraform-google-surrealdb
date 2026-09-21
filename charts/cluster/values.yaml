@@ -1,6 +1,15 @@
 tls:
   enabled: true
+
 serviceAccount:
   create: false
   name: tidb-encryption
   annotations: {}
+
+enable_prometheus: disabled
+monitoring:
+  interval: 15s
+  serviceAccount:
+    create: false
+    name: surrealdb-monitoring
+    annotations: {}

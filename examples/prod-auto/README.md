@@ -21,6 +21,18 @@ The differences between basic and production autopilot are:
  
 The replica counts and resource values in the production charts are minimum recommendations for an HA deployment. For larger databases, increase the CPU and memory under `resources` and increase the data volume sizes under `volumes` in the `pd-group` and `tikv-group` charts to match the expected workload and storage requirements.
 
+### Enable managed Prometheus
+
+The production cluster enables GKE Managed Service for Prometheus in `main.tf` and the cluster Helm values render a `PodMonitoring` resource. The monitoring Kubernetes ServiceAccount is bound to the Terraform-created Google service account through Workload Identity.
+
+After applying Terraform, get the generated Google service account email:
+
+```bash
+terraform output monitoring_service_account_email
+```
+
+Replace the `<PROJECT_ID>` placeholder in `values.cluster.yaml` with the matching email before installing the cluster chart. Managed collection still requires the `PodMonitoring` CRD supplied by GKE Managed Service for Prometheus.
+
 ### Enable scaling
 
 The production example leaves horizontal scaling enabled with `disable_horizontal_scaling = false` and enables vertical scaling with `enable_vertical_scaling = true` in `examples/prod-auto/main.tf`. Set `disable_horizontal_scaling = true` to disable the GKE horizontal pod autoscaling addon. Horizontal scaling keeps three SurrealDB pods running and scales up to nine based on CPU utilization; vertical scaling adjusts pod resources through GKE Autopilot.
