@@ -1,0 +1,16 @@
+tls:
+  enabled: true
+
+replicas: 1
+
+resources:
+  cpu: 500m
+  memory: 1Gi
+
+volumes:
+  data:
+    storage: 1Gi
+    storageClassName: premium-rwo
+
+# Format: gke-pd-<cluster_key>
+serviceAccountName: gke-pd-<REGION>-1

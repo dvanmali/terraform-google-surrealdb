@@ -9,23 +9,23 @@ metadata:
 spec:
   cluster:
     name: sdb-datastore
-  replicas: 1
+  replicas: {{ .Values.replicas }}
   template:
     spec:
-      version: v8.5.8
+      version: {{ .Values.version }}
       resources:
-        cpu: 500m
-        memory: 1Gi
+        cpu: {{ .Values.resources.cpu }}
+        memory: {{ .Values.resources.memory }}
       volumes:
       - name: data
-        storage: 1Gi
-        storageClassName: premium-rwo
+        storage: {{ .Values.volumes.data.storage }}
+        storageClassName: {{ .Values.volumes.data.storageClassName }}
         mounts:
         - type: data
       config: |
         [replication]
           location-labels = ["topology.kubernetes.io/zone", "kubernetes.io/hostname"]
-          max-replicas = 3
+          max-replicas = {{ .Values.maxReplicas || default 3 }} # Copies of each data piece across different zones
       {{- if .Values.tls.enabled }}
         [security]
           cert-allowed-cn = ["surrealdb", "cluster", "pd", "tikv"]
@@ -33,18 +33,6 @@ spec:
       overlay:
         pod:
           spec:
-            # {{- if .Values.tls.enabled }}
-            # volumes:
-            # - name: pd-tls
-            #   secret:
-            #     secretName: pd-pd-cluster-secret
-            # containers:
-            # - name: pd
-            #   volumeMounts:
-            #   - name: pd-tls
-            #     mountPath: /etc/pd-tls
-            #     readOnly: true
-            # {{- end }}
             # nodeSelector:
             #   dedicated: pd
             serviceAccountName: {{ .Values.serviceAccountName | quote }}

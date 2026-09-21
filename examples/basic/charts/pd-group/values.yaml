@@ -1,5 +1,0 @@
-tls:
-  enabled: true
-
-# Format: gke-pd-<cluster_key>
-serviceAccountName: gke-pd-<REGION>-1

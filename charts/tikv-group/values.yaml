@@ -1,3 +1,5 @@
+version: v8.5.8
+
 tls:
   enabled: true
 
@@ -9,5 +11,16 @@ encryption:
     keyID: ""
     region: ""
 
+replicas: 3
+
+resources:
+  cpu: 500m
+  memory: 3Gi
+
+volumes:
+  data:
+    storage: 10Gi
+    storageClassName: premium-rwo
+
 # Format: gke-tikv-<cluster_key>
-serviceAccountName: gke-tikv-<REGION>-1
+serviceAccountName: gke-tikv

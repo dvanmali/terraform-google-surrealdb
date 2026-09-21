@@ -9,17 +9,17 @@ metadata:
 spec:
   cluster:
     name: sdb-datastore
-  replicas: 1
+  replicas: {{ .Values.replicas }}
   template:
     spec:
-      version: v8.5.8
+      version: {{ .Values.version }}
       resources:
-        cpu: 500m
-        memory: 3Gi
+        cpu: {{ .Values.resources.cpu }}
+        memory: {{ .Values.resources.memory }}
       volumes:
       - name: data
-        storage: 10Gi
-        storageClassName: premium-rwo
+        storage: {{ .Values.volumes.data.storage }}
+        storageClassName: {{ .Values.volumes.data.storageClassName }}
         mounts:
         - type: data
       config: |
@@ -41,18 +41,6 @@ spec:
       overlay:
         pod:
           spec:
-            # {{- if .Values.tls.enabled }}
-            # volumes:
-            # - name: tikv-tls
-            #   secret:
-            #     secretName: tikv-tikv-cluster-secret
-            # containers:
-            # - name: tikv
-            #   volumeMounts:
-            #   - name: tikv-tls
-            #     mountPath: /etc/tikv-tls
-            #     readOnly: true
-            # {{- end }}
             terminationGracePeriodSeconds: 600
             # nodeSelector:
             #   dedicated: tikv

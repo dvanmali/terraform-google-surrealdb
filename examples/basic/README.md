@@ -152,9 +152,12 @@ tidb-operator-xxx             1/1     Running   0          3m30s
 
 Now that we have the TiDB Operator running, it's time to define a TiKV Cluster and let the Operator do the rest.
 
-1. Install the cluster chart from the example directory.
+1. Add the published Helm chart repository and install the cluster chart.
 ```bash
-h upgrade --install cluster ./charts/cluster -n surreal-cluster --create-namespace
+h repo add sdb-datastore https://dvanmali.github.io/terraform-google-surrealdb
+h repo update
+h upgrade --install -f ./values.cluster.yaml cluster sdb-datastore/cluster \
+  -n surreal-cluster --create-namespace
 ```
 
 The cluster chart enables mutual TLS by default and creates the CA, cluster client, and PD/TiKV certificates. Disable it with `--set tls.enabled=false` on the cluster, PD, and TiKV chart installs. When enabled, wait for the certificates to become ready before installing the component groups:
@@ -173,7 +176,7 @@ tikv-tikv-cluster   True    tikv-tikv-cluster-secret   10s
 
 2. Install the PD group chart.
 ```bash
-h upgrade --install pd-group ./charts/pd-group -n surreal-cluster \
+h upgrade --install -f ./values.pd.yaml pd-group sdb-datastore/pd-group -n surreal-cluster \
   --set-string serviceAccountName="$PD_SERVICE_ACCOUNT"
 k get pdgroup -n surreal-cluster
 ```
@@ -184,7 +187,7 @@ pd     sdb-datastore   1         1       1         pd-pd-xxx          pd-pd-xxx 
 
 3. Install the TiKV group chart.
 ```bash
-h upgrade --install tikv-group ./charts/tikv-group -n surreal-cluster \
+h upgrade --install -f ./values.tikv.yaml tikv-group sdb-datastore/tikv-group -n surreal-cluster \
   --set encryption.enabled=true \
   --set-string serviceAccountName="$TIKV_SERVICE_ACCOUNT" \
   --set-string encryption.kms.keyID="$KMS_KEY_ID" \
@@ -208,14 +211,14 @@ tikv-tikv-xxx     1/1       Running   0          2m
 
 ## Deploy SurrealDB
 
-Now that we have a TiDB cluster running, we can deploy SurrealDB using the Helm chart included in this repository under [charts/surrealdb](./charts/surrealdb). The chart is configured to connect to the TiKV PD service and exposes the SurrealDB service through the GKE NEG.
+Now that we have a TiDB cluster running, we can deploy SurrealDB using the published Helm chart. The chart is configured to connect to the TiKV PD service and exposes the SurrealDB service through the GKE NEG.
 
 1. Copy the surrealdb values file locally. Replace the version and the placeholder in `cloud.google.com/neg` with your cluster name (for the example, replace "\<REGION\>") and the `iam.gke.io/gcp-service-account` with your workload identity service account (replace "\<PROJECT_ID\>").
 ```bash
-cp ./charts/surrealdb/values.example.yaml values.local.yaml
+cp ./values.surrealdb.yaml values.local.yaml
 ```
 
-2. Install the chart from the repository checkout.
+2. Install the published chart.
 ```bash
 h repo add surrealdb https://helm.surrealdb.com
 h repo update
