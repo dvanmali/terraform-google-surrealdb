@@ -1,0 +1,24 @@
+tls:
+  enabled: true
+
+encryption:
+  enabled: true
+  dataEncryptionMethod: aes256-ctr
+  dataKeyRotationPeriod: 168h
+  kms:
+    keyID: ""
+    region: ""
+
+replicas: 3
+
+resources:
+  cpu: 500m
+  memory: 3Gi
+
+volumes:
+  data:
+    storage: 10Gi
+    storageClassName: premium-rwo
+
+# Format: gke-tikv-<cluster_key>
+serviceAccountName: gke-tikv-<REGION>-1

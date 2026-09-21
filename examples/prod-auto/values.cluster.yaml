@@ -1,0 +1,6 @@
+tls:
+  enabled: true
+serviceAccount:
+  create: false
+  name: tidb-encryption
+  annotations: {}

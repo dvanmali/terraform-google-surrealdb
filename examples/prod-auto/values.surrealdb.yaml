@@ -1,0 +1,113 @@
+replicaCount: 3
+
+image:
+  repository: surrealdb/surrealdb
+  pullPolicy: IfNotPresent
+  # Recommend to replace with a specific version instead of 'latest' for stability
+  tag: latest
+
+imagePullSecrets: []
+
+nameOverride: "surrealdb"
+fullnameOverride: ""
+
+args: [start]
+
+surrealdb:
+  path: tikv://pd-pd:2379
+  log: info
+  auth: true
+  initial_user: "root"
+  initial_pass: "root"
+  port: 443
+  # You can specify a custom service account name here (e.g., gke-sdb-prod, gke-sdb-<CLUSTER_NAME>)
+  # @see - serviceAccount.serviceAccountName
+  serviceAccountName: gke-sdb-<REGION>-1
+
+strategy:
+  type: RollingUpdate
+
+serviceAccount:
+  create: true
+  serviceAccountName: gke-sdb-<REGION>-1
+  annotations:
+    iam.gke.io/gcp-service-account: gke-sdb-<REGION>-1@<PROJECT_ID>.iam.gserviceaccount.com
+
+podExtraEnv:
+  - name: SURREAL_TIKV_TLS_CA_PATH
+    value: /etc/surrealdb/kvs-tls/ca.crt
+  - name: SURREAL_TIKV_TLS_CERT_PATH
+    value: /etc/surrealdb/kvs-tls/tls.crt
+  - name: SURREAL_TIKV_TLS_KEY_PATH
+    value: /etc/surrealdb/kvs-tls/tls.key
+  - name: SURREAL_WEB_CRT
+    value: /etc/surrealdb/web-tls/tls.crt
+  - name: SURREAL_WEB_KEY
+    value: /etc/surrealdb/web-tls/tls.key
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+initContainers: []
+extraContainers: []
+
+service:
+  type: NodePort
+  port: 443
+  selector:
+    app: surrealdb
+  annotations:
+    # Format: cloud.google.com/neg: '{"exposed_ports": {"<PORT>": {"name": "surrealdb-<CLUSTER_NAME>-neg"}}}'
+    cloud.google.com/neg: '{"exposed_ports": {"443": {"name": "surrealdb-<REGION>-1-neg"}}}'
+
+ingress:
+  enabled: false
+
+# resources:
+#   requests:
+#     cpu: 500m
+#     memory: 1Gi
+
+lifecycle: {}
+terminationGracePeriodSeconds: null
+
+horizontalPodAutoscaler:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  metrics: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+volumes:
+  - name: kvs-tls
+    secret:
+      secretName: sdb-kvs-secret
+  - name: web-tls
+    secret:
+      secretName: sdb-web-secret
+volumeMounts:
+  - name: kvs-tls
+    mountPath: /etc/surrealdb/kvs-tls
+    readOnly: true
+  - name: web-tls
+    mountPath: /etc/surrealdb/web-tls
+    readOnly: true
+
+persistence:
+  enabled: false
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+    scheme: HTTPS
+  timeoutSeconds: 5
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    scheme: HTTPS
+    port: http
+  timeoutSeconds: 5
