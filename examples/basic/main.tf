@@ -15,6 +15,7 @@ locals {
       master_ipv4_cidr_block       = "10.0.0.0/28"                              # CIDR block for the cluster control plane
       deletion_protection          = true                                       # (Optional) default is true
       enable_autopilot             = true
+      enable_managed_prometheus    = true
       enable_backup                = true # (Recommended)
       daily_maintenance_start_time = "00:00"
       encryption_at_rest = {

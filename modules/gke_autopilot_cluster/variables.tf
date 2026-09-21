@@ -117,6 +117,24 @@ variable "enable_autopilot" {
   default     = null
 }
 
+variable "enable_managed_prometheus" {
+  type        = bool
+  description = "Enable Google Cloud Managed Service for Prometheus for this cluster"
+  default     = true
+}
+
+variable "enable_vertical_scaling" {
+  type        = bool
+  description = "Enable vertical pod autoscaling for the cluster"
+  default     = false
+}
+
+variable "disable_horizontal_scaling" {
+  type        = bool
+  description = "Disable horizontal pod autoscaling for the cluster"
+  default     = false
+}
+
 variable "enable_backup" {
   type        = bool
   nullable    = false

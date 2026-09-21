@@ -10,22 +10,25 @@ module "gke_clusters" {
   for_each = var.gke_clusters
   source   = "./modules/gke_autopilot_cluster"
 
-  key                    = replace(each.key, "_", "-")
-  project_id             = var.project_id
-  vpc                    = data.google_compute_network.vpc.id
-  vpc_subnet             = "surrealdb-${replace(each.key, "_", "-")}"
-  vpc_subnet_ip          = each.value.vpc_subnet_ip # 256 IP addresses (Reserves 10.1.0.0-10.1.0.255)
-  proxy_subnet_ip_cidr   = each.value.proxy_subnet_ip_cidr
-  region                 = each.value.region
-  node_zones             = each.value.node_zones
-  master_ipv4_cidr_block = each.value.master_ipv4_cidr_block
-  deletion_protection    = each.value.deletion_protection
-  enable_autopilot       = each.value.enable_autopilot
-  enable_backup          = each.value.enable_backup
-  enable_dns_access      = var.enable_dns_access
-  enable_ip_access       = var.enable_ip_access
-  enable_jump_host       = var.enable_jump_host
-  enable_tls             = var.enable_tls
+  key                        = replace(each.key, "_", "-")
+  project_id                 = var.project_id
+  vpc                        = data.google_compute_network.vpc.id
+  vpc_subnet                 = "surrealdb-${replace(each.key, "_", "-")}"
+  vpc_subnet_ip              = each.value.vpc_subnet_ip # 256 IP addresses (Reserves 10.1.0.0-10.1.0.255)
+  proxy_subnet_ip_cidr       = each.value.proxy_subnet_ip_cidr
+  region                     = each.value.region
+  node_zones                 = each.value.node_zones
+  master_ipv4_cidr_block     = each.value.master_ipv4_cidr_block
+  deletion_protection        = each.value.deletion_protection
+  enable_autopilot           = each.value.enable_autopilot
+  enable_managed_prometheus  = each.value.enable_managed_prometheus
+  enable_vertical_scaling    = each.value.enable_vertical_scaling
+  disable_horizontal_scaling = each.value.disable_horizontal_scaling
+  enable_backup              = each.value.enable_backup
+  enable_dns_access          = var.enable_dns_access
+  enable_ip_access           = var.enable_ip_access
+  enable_jump_host           = var.enable_jump_host
+  enable_tls                 = var.enable_tls
   daily_maintenance_start_time = coalesce(
     each.value.daily_maintenance_start_time,
     each.value.daily_maintenance_policy,

@@ -113,6 +113,9 @@ variable "gke_clusters" {
     jump_host_ip                  = optional(string)
     deletion_protection           = optional(bool, true)
     enable_autopilot              = optional(bool, false)
+    enable_managed_prometheus     = optional(bool, true)
+    enable_vertical_scaling       = optional(bool, false)
+    disable_horizontal_scaling    = optional(bool, false)
     enable_backup                 = optional(bool, false) # Recommended in prod
     daily_maintenance_start_time  = optional(string)      # Defaults to midnight (HH:MM)
     daily_maintenance_policy      = optional(string)      # Deprecated alias for daily_maintenance_start_time

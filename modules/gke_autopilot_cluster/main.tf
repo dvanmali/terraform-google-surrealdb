@@ -44,6 +44,19 @@ resource "google_container_cluster" "surreal" {
 
   enable_autopilot = var.enable_autopilot
 
+  monitoring_config {
+    managed_prometheus {
+      enabled = var.enable_managed_prometheus
+    }
+  }
+
+  dynamic "vertical_pod_autoscaling" {
+    for_each = var.enable_vertical_scaling ? [1] : []
+    content {
+      enabled = true
+    }
+  }
+
   dynamic "workload_identity_config" {
     for_each = var.enable_workload_identity && !var.enable_autopilot ? [1] : []
     content {
@@ -81,6 +94,10 @@ resource "google_container_cluster" "surreal" {
   }
 
   addons_config {
+    horizontal_pod_autoscaling {
+      disabled = var.disable_horizontal_scaling
+    }
+
     gke_backup_agent_config {
       enabled = var.enable_backup
     }
