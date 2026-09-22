@@ -12,7 +12,9 @@ imagePullSecrets: []
 nameOverride: "surrealdb"
 fullnameOverride: ""
 
-args: [start]
+# Deny all incoming connections by default, enable as needed
+# @see - https://surrealdb.com/docs/learn/security/best-practices/security-best-practices
+args: [start, "--deny-all", "--no-identification-headers"]
 
 surrealdb:
   path: tikv://pd-pd:2379
