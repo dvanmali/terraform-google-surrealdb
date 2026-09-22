@@ -1,5 +1,7 @@
 # SurrealDB Terraform Deployment
 
+[![Terraform Registry](https://img.shields.io/badge/Terraform%20Registry-844FBA?logo=terraform&logoColor=white)](https://registry.terraform.io/modules/dvanmali/surrealdb/google)
+
 A Google Kubernetes Engine Terraform deployment served on a HTTPS endpoint.
 
 **Configuration Options:**
