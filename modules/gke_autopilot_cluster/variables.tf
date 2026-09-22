@@ -126,6 +126,7 @@ variable "enable_managed_prometheus" {
 variable "monitoring" {
   type = object({
     enabled                    = optional(bool, false)
+    enable_components          = optional(list(string), ["SYSTEM_COMPONENTS"])
     service_account_email      = optional(string)
     service_account_name       = optional(string)
     kubernetes_namespace       = optional(string, "surreal-cluster")

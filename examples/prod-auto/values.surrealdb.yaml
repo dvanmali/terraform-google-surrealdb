@@ -1,4 +1,5 @@
-replicaCount: 3
+# @see https://github.com/surrealdb/helm-charts/blob/main/charts/surrealdb/values.yaml
+replicaCount: 2
 
 image:
   repository: surrealdb/surrealdb
@@ -65,19 +66,25 @@ service:
 ingress:
   enabled: false
 
-# resources:
-#   requests:
-#     cpu: 500m
-#     memory: 1Gi
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
 
 lifecycle: {}
 terminationGracePeriodSeconds: null
 
 horizontalPodAutoscaler:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 1
-  metrics: []
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 9
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
 
 nodeSelector: {}
 tolerations: []
@@ -89,21 +96,12 @@ volumes:
   - name: web-tls
     secret:
       secretName: sdb-web-secret
-  - name: surrealdb-metrics
-    csi:
-      driver: secrets-store-gke.csi.k8s.io
-      readOnly: true
-      volumeAttributes:
-        secretProviderClass: surrealdb-metrics
 volumeMounts:
   - name: kvs-tls
     mountPath: /etc/surrealdb/kvs-tls
     readOnly: true
   - name: web-tls
     mountPath: /etc/surrealdb/web-tls
-    readOnly: true
-  - name: surrealdb-metrics
-    mountPath: /var/run/secrets/surrealdb-metrics
     readOnly: true
 
 persistence:

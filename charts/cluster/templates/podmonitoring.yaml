@@ -65,8 +65,9 @@ spec:
       basicAuth:
         username: {{ .Values.monitoring.surrealdb.credentials.username }}
         password:
-          name: {{ .Values.monitoring.surrealdb.credentials.name }}
-          key: password
+          secret:
+            name: {{ .Values.monitoring.surrealdb.credentials.name }}
+            key: password
       {{- if .Values.tls.enabled }}
       scheme: https
       tls:

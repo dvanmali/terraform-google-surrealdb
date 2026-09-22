@@ -78,9 +78,9 @@ Create the two annotated Kubernetes service accounts (apply to every cluster):
 # export REGION= location of the cluster
 CLUSTER_NAME="$REGION-1"
 KEY_NAME="${CLUSTER_NAME//-/_}"
-KMS_KEY_ID=$(terraform output -json --state ../../terraform.tfstate encryption_at_rest_key_ids | jq -r --arg cluster "$KEY_NAME" '.[$cluster]')
-PD_GCP_SERVICE_ACCOUNT=$(terraform output -json --state ../../terraform.tfstate encryption_at_rest_service_account_emails | jq -r --arg cluster "$KEY_NAME" '.[$cluster].pd')
-TIKV_GCP_SERVICE_ACCOUNT=$(terraform output -json --state ../../terraform.tfstate encryption_at_rest_service_account_emails | jq -r --arg cluster "$KEY_NAME" '.[$cluster].tikv')
+KMS_KEY_ID=$(terraform output -json --state terraform.tfstate encryption_at_rest_key_ids | jq -r --arg cluster "$KEY_NAME" '.[$cluster]')
+PD_GCP_SERVICE_ACCOUNT=$(terraform output -json --state terraform.tfstate encryption_at_rest_service_account_emails | jq -r --arg cluster "$KEY_NAME" '.[$cluster].pd')
+TIKV_GCP_SERVICE_ACCOUNT=$(terraform output -json --state terraform.tfstate encryption_at_rest_service_account_emails | jq -r --arg cluster "$KEY_NAME" '.[$cluster].tikv')
 PD_SERVICE_ACCOUNT="gke-pd-${CLUSTER_NAME}"
 TIKV_SERVICE_ACCOUNT="gke-tikv-${CLUSTER_NAME}"
 
@@ -107,7 +107,7 @@ To rotate the master key, configure the new and previous KMS keys in the TiKV an
 
 The cluster chart creates a self-signed CA and component certificates through cert-manager. Cert-manager is trusted within the namespace, not externally where the load balancer has a Google-Managed SSL certificate.
 
-Install cert-manager with bare-minimum resources before installing the TiDB Operator or the cluster chart:
+Install cert-manager with bare-minimum resources before installing the TiDB Operator or the cluster chart (note the [production instructions](../prod-auto/README.md#install-cert-manager) have different commands for high availability):
 
 ```bash
 h repo add jetstack https://charts.jetstack.io
@@ -152,7 +152,12 @@ tidb-operator-xxx             1/1     Running   0          3m30s
 
 Now that we have the TiDB Operator running, it's time to define a TiKV Cluster and let the Operator do the rest.
 
-1. Add the published Helm chart repository and install the cluster chart.
+1. Add the published Helm chart repository and install the cluster chart. Remeber to replace \<PROJECT_ID\> in your `values.cluster.yaml`.
+<!--
+```bash
+h upgrade --install -f ./values.cluster.local.yaml cluster ../../charts/cluster -n surreal-cluster --create-namespace
+```
+-->
 ```bash
 h repo add sdb-datastore https://dvanmali.github.io/terraform-google-surrealdb
 h repo update
@@ -174,7 +179,12 @@ surreal-tls         True    surreal-tls-secret         10s
 tikv-tikv-cluster   True    tikv-tikv-cluster-secret   10s
 ```
 
-2. Install the PD group chart.
+2. Install the PD group chart. Remember to replace the \<REGION\> in your `values.pd.yaml`.
+<!--
+```bash
+h upgrade --install -f ./values.pd.local.yaml pd-group ../../charts/pd-group -n surreal-cluster
+```
+-->
 ```bash
 h upgrade --install -f ./values.pd.yaml pd-group sdb-datastore/pd-group -n surreal-cluster \
   --set-string serviceAccountName="$PD_SERVICE_ACCOUNT"
@@ -185,7 +195,16 @@ NAME   CLUSTER         DESIRED   READY   UPDATED   UPDATEREVISION     CURRENTREV
 pd     sdb-datastore   1         1       1         pd-pd-xxx          pd-pd-xxx          True     True    45s
 ```
 
-3. Install the TiKV group chart.
+3. Install the TiKV group chart. Remember to replace the \<REGION\> in your `values.tikv.yaml`.
+<!--
+```bash
+h upgrade --install -f ./values.tikv.local.yaml tikv-group ../../charts/tikv-group -n surreal-cluster \
+  --set encryption.enabled=true \
+  --set-string serviceAccountName="$TIKV_SERVICE_ACCOUNT" \
+  --set-string encryption.kms.keyID="$KMS_KEY_ID" \
+  --set-string encryption.kms.region="$REGION"
+```
+-->
 ```bash
 h upgrade --install -f ./values.tikv.yaml tikv-group sdb-datastore/tikv-group -n surreal-cluster \
   --set encryption.enabled=true \
@@ -215,14 +234,14 @@ Now that we have a TiDB cluster running, we can deploy SurrealDB using the publi
 
 1. Copy the surrealdb values file locally. Replace the version and the placeholder in `cloud.google.com/neg` with your cluster name (for the example, replace "\<REGION\>") and the `iam.gke.io/gcp-service-account` with your workload identity service account (replace "\<PROJECT_ID\>").
 ```bash
-cp ./values.surrealdb.yaml values.local.yaml
+cp ./values.surrealdb.yaml values.surrealdb.local.yaml
 ```
 
 2. Install the published chart.
 ```bash
 h repo add surrealdb https://helm.surrealdb.com
 h repo update
-h upgrade --install -f values.local.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
+h upgrade --install -f values.surrealdb.local.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
 ```
 
 3. Check the deployment status to check everything is ready.

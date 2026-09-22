@@ -126,9 +126,9 @@ variable "gke_clusters" {
     daily_maintenance_start_time  = optional(string)      # Defaults to midnight (HH:MM)
     daily_maintenance_policy      = optional(string)      # Deprecated alias for daily_maintenance_start_time
     cluster_service_account_email = optional(string)
-    surrealdb_service_account_email = optional(string)
     monitoring = optional(object({
       enabled                    = optional(bool, false)
+      enable_components          = optional(list(string), ["SYSTEM_COMPONENTS"])
       kubernetes_namespace       = optional(string, "surreal-cluster")
       kubernetes_service_account = optional(string, "surrealdb-monitoring")
     }), {})

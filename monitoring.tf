@@ -31,13 +31,10 @@ resource "google_secret_manager_secret" "surrealdb_metrics_password" {
 }
 
 resource "google_secret_manager_secret_iam_member" "surrealdb_metrics_password_accessor" {
-  for_each = local.monitoring_enabled ? {
-    for key, cluster in var.gke_clusters : key => cluster
-    if cluster.surrealdb_service_account_email != null
-  } : {}
+  for_each = local.monitoring_enabled ? { monitoring = true } : {}
 
   project   = var.project_id
   secret_id = google_secret_manager_secret.surrealdb_metrics_password[0].secret_id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${each.value.surrealdb_service_account_email}"
+  member    = "serviceAccount:${google_service_account.monitoring[0].email}"
 }

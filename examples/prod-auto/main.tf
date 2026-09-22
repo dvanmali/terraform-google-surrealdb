@@ -16,18 +16,18 @@ locals {
       deletion_protection       = true                                       # (Optional) default is true
       enable_autopilot          = true
       enable_managed_prometheus = true
-      monitoring = {
-        enabled = true
-      }
-      surrealdb_service_account_email = "gke-sdb-<REGION>-1@<PROJECT_ID>.iam.gserviceaccount.com"
-      enable_vertical_scaling      = true  # Enable vertical pod autoscaling
-      disable_horizontal_scaling   = false # Keep horizontal pod autoscaling enabled
-      enable_backup                = true  # (Recommended)
-      daily_maintenance_start_time = "00:00"
       encryption_at_rest = {
         enabled = true
       }
-      # cluster_service_account_email = "" # (Recommended) this value should be filled out before cluster creation
+
+      ## Important production variables
+      cluster_service_account_email = "gke-surreal-cluster@<PROJECT_ID>.iam.gserviceaccount.com" # Fill out before cluster creation (see [README](../../README.md#iam)) (can be same for all clusters)
+      enable_vertical_scaling       = true                                                       # Enable vertical pod autoscaling
+      enable_backup                 = true                                                       # Backup plan added separately
+      daily_maintenance_start_time  = "00:00"
+      monitoring = {
+        enabled = true
+      }
     }
   }
 
@@ -47,7 +47,8 @@ provider "google" {
 }
 
 module "gke-surrealdb" {
-  source = "../.."
+  source  = "dvanmali/surrealdb/google"
+  version = "2.0.0"
 
   project_id    = local.project_id
   vpc           = local.vpc
@@ -57,4 +58,7 @@ module "gke-surrealdb" {
   enable_external_global_lb         = local.enable_external_global_lb
   enable_internal_cross_regional_lb = local.enable_internal_cross_regional_lb
 
+  providers = {
+    google = google
+  }
 }

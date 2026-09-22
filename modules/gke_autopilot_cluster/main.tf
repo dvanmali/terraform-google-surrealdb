@@ -44,9 +44,17 @@ resource "google_container_cluster" "surreal" {
 
   enable_autopilot = var.enable_autopilot
 
-  monitoring_config {
-    managed_prometheus {
-      enabled = var.enable_managed_prometheus
+  dynamic "monitoring_config" {
+    for_each = var.enable_autopilot || var.enable_managed_prometheus || var.monitoring.enabled ? [1] : []
+    content {
+      enable_components = var.monitoring.enable_components
+
+      dynamic "managed_prometheus" {
+        for_each = var.enable_autopilot || var.enable_managed_prometheus ? [1] : []
+        content {
+          enabled = true
+        }
+      }
     }
   }
 
@@ -101,6 +109,10 @@ resource "google_container_cluster" "surreal" {
     gke_backup_agent_config {
       enabled = var.enable_backup
     }
+  }
+
+  secret_manager_config {
+    enabled = true
   }
 
   master_authorized_networks_config {}

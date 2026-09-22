@@ -25,7 +25,7 @@ spec:
       config: |
         [replication]
           location-labels = ["topology.kubernetes.io/zone", "kubernetes.io/hostname"]
-          max-replicas = {{ .Values.maxReplicas || default 3 }} # Copies of each data piece across different zones
+          max-replicas = {{ .Values.maxReplicas | default 3 }} # Copies of each data piece across different zones
       {{- if .Values.tls.enabled }}
         [security]
           cert-allowed-cn = ["surrealdb", "cluster", "pd", "tikv"]

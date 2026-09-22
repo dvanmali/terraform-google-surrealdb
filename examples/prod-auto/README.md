@@ -10,6 +10,7 @@ To ensure this example works without error, ensure you have the Project Owner IA
 - External Load Balancer with HTTPS endpoint (Google-managed SSL certificate)
 - NAT for cluster internet connectivity
 - Encryption at Rest Storage (with master-key KMS)
+- Horizontal pod autoscaling
 
 # Deploy
 
@@ -34,7 +35,7 @@ terraform output monitoring_service_account_email
 
 Replace the `<PROJECT_ID>` placeholder in `values.cluster.yaml` with the matching email before installing the cluster chart. Managed collection still requires the `PodMonitoring` and `Rules` CRDs supplied by GKE Managed Service for Prometheus.
 
-Set `surrealdb_service_account_email` in `main.tf` to the Google service account annotated on the SurrealDB pods. Terraform grants that account access to the two metrics secrets for the GKE Secret Manager CSI driver.
+Terraform grants the monitoring Google service account access to the metrics secrets for the GKE Secret Manager CSI driver.
 
 The cluster chart can install the SurrealDB, PD, TiKV, [node exporter](https://github.com/prometheus/node_exporter), and [blackbox exporter](https://github.com/prometheus/blackbox_exporter). PD and TiKV rules are enabled by default when rules are enabled; node exporter and blackbox rules are disabled by default because they require those exporters and targets. SurrealDB rules are enabled in this example and use the metric families described in the [SurrealDB metrics reference](https://surrealdb.com/docs/manage/observability/metrics.md). Set `monitoring.rules.enabled: false` to install managed collection without alert rules.
 
@@ -67,14 +68,7 @@ Apply the Terraform change, then install SurrealDB with the production values:
 
 ```bash
 terraform apply
-h upgrade --install -f ./charts/surrealdb/values.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
-```
-
-Verify both scaling mechanisms:
-
-```bash
-k get hpa -n surreal-cluster
-k describe cluster surrealdb-<REGION>-1
+h upgrade --install -f values.surrealdb.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
 ```
 
 ## Install cert-manager
