@@ -2,3 +2,4 @@ apiVersion: v2
 name: cluster
 version: 0.1.0
 type: application
+description: TiDB cluster resources with optional Prometheus monitoring and alert rules

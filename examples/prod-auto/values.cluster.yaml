@@ -9,6 +9,21 @@ serviceAccount:
 enable_prometheus: managed
 monitoring:
   interval: 15s
+  rules:
+    enabled: true
+    surrealdb: true
+  surrealdb:
+    enabled: true
+    port: http
+    path: /metrics
+    credentials:
+      name: surrealdb-metrics
+      username: metrics
+    secretManager:
+      enabled: true
+      projectId: "<PROJECT_ID>"
+      passwordSecret: surrealdb-metrics-password
+      version: latest
   serviceAccount:
     create: true
     name: surrealdb-monitoring

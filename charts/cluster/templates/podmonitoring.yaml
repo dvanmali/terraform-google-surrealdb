@@ -29,4 +29,61 @@ spec:
       {{- else }}
       scheme: http
       {{- end }}
+---
+{{- if .Values.monitoring.surrealdb.enabled }}
+{{- if .Values.monitoring.surrealdb.secretManager.enabled }}
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: surrealdb-metrics
+spec:
+  provider: gke
+  parameters:
+    secrets: |
+      - resourceName: "projects/{{ .Values.monitoring.surrealdb.secretManager.projectId }}/secrets/{{ .Values.monitoring.surrealdb.secretManager.passwordSecret }}/versions/{{ .Values.monitoring.surrealdb.secretManager.version }}"
+        path: "password"
+  secretObjects:
+    - secretName: {{ .Values.monitoring.surrealdb.credentials.name }}
+      type: Opaque
+      data:
+        - objectName: password
+          key: password
+{{- end }}
+---
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: surrealdb
+spec:
+  selector:
+    matchLabels:
+      app: surrealdb
+  endpoints:
+    - port: {{ .Values.monitoring.surrealdb.port }}
+      path: {{ .Values.monitoring.surrealdb.path }}
+      interval: {{ .Values.monitoring.interval | default "15s" }}
+      basicAuth:
+        username: {{ .Values.monitoring.surrealdb.credentials.username }}
+        password:
+          name: {{ .Values.monitoring.surrealdb.credentials.name }}
+          key: password
+      {{- if .Values.tls.enabled }}
+      scheme: https
+      tls:
+        ca:
+          secret:
+            name: sdb-web-secret
+            key: ca.crt
+        cert:
+          secret:
+            name: sdb-web-secret
+            key: tls.crt
+        key:
+          secret:
+            name: sdb-web-secret
+            key: tls.key
+      {{- else }}
+      scheme: http
+      {{- end }}
+{{- end }}
 {{- end }}

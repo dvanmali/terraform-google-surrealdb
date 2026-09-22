@@ -19,6 +19,7 @@ locals {
       monitoring = {
         enabled = true
       }
+      surrealdb_service_account_email = "gke-sdb-<REGION>-1@<PROJECT_ID>.iam.gserviceaccount.com"
       enable_vertical_scaling      = true  # Enable vertical pod autoscaling
       disable_horizontal_scaling   = false # Keep horizontal pod autoscaling enabled
       enable_backup                = true  # (Recommended)

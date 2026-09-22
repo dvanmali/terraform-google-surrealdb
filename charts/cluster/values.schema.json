@@ -14,6 +14,55 @@
         "annotations": { "type": "object" }
       },
       "additionalProperties": false
+    },
+    "monitoring": {
+      "type": "object",
+      "properties": {
+        "interval": { "type": "string" },
+        "rules": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "pd": { "type": "boolean" },
+            "tikv": { "type": "boolean" },
+            "nodeExporter": { "type": "boolean" },
+            "blackbox": { "type": "boolean" },
+            "surrealdb": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "surrealdb": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "port": { "type": "string" },
+            "path": { "type": "string" },
+            "credentials": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "username": { "type": "string" }
+              },
+              "required": ["name", "username"],
+              "additionalProperties": false
+            },
+            "secretManager": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "projectId": { "type": "string" },
+                "passwordSecret": { "type": "string" },
+                "version": { "type": "string" }
+              },
+              "required": ["enabled", "projectId", "passwordSecret", "version"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["enabled", "port", "path", "credentials"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": true

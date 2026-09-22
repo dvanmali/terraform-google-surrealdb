@@ -34,6 +34,8 @@ serviceAccount:
     iam.gke.io/gcp-service-account: gke-sdb-<REGION>-1@<PROJECT_ID>.iam.gserviceaccount.com
 
 podExtraEnv:
+  - name: SURREAL_METRICS_ENABLED
+    value: "true"
   - name: SURREAL_TIKV_TLS_CA_PATH
     value: /etc/surrealdb/kvs-tls/ca.crt
   - name: SURREAL_TIKV_TLS_CERT_PATH
@@ -87,12 +89,21 @@ volumes:
   - name: web-tls
     secret:
       secretName: sdb-web-secret
+  - name: surrealdb-metrics
+    csi:
+      driver: secrets-store-gke.csi.k8s.io
+      readOnly: true
+      volumeAttributes:
+        secretProviderClass: surrealdb-metrics
 volumeMounts:
   - name: kvs-tls
     mountPath: /etc/surrealdb/kvs-tls
     readOnly: true
   - name: web-tls
     mountPath: /etc/surrealdb/web-tls
+    readOnly: true
+  - name: surrealdb-metrics
+    mountPath: /var/run/secrets/surrealdb-metrics
     readOnly: true
 
 persistence:

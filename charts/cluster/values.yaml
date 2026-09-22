@@ -9,6 +9,25 @@ serviceAccount:
 enable_prometheus: disabled
 monitoring:
   interval: 15s
+  rules:
+    enabled: false
+    pd: true
+    tikv: true
+    nodeExporter: false
+    blackbox: false
+    surrealdb: false
+  surrealdb:
+    enabled: false
+    port: http
+    path: /metrics
+    credentials:
+      name: surrealdb-metrics
+      username: metrics
+    secretManager:
+      enabled: false
+      projectId: ""
+      passwordSecret: surrealdb-metrics-password
+      version: latest
   serviceAccount:
     create: false
     name: surrealdb-monitoring

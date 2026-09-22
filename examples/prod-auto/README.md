@@ -18,6 +18,7 @@ The deployment instructions are the same as the instructions as [Basic](../basic
 The differences between basic and production autopilot are:
 - High availability with minimum replica set of 3 for each pd-group, tikv-group, and surrealdb.
 - Horizontal scaling of SurrealDB. by default and optional vertical pod scaling with `enable_vertical_scaling = true`. Note that scaling for TiKV and PD is performed using resources (vertical scaling) and replicas (horizontal scaling) in which kubernetes and the tidb-operator will handle the scaling operations.
+- Enabled Prometheus metrics to Google Monitoring.
  
 The replica counts and resource values in the production charts are minimum recommendations for an HA deployment. For larger databases, increase the CPU and memory under `resources` and increase the data volume sizes under `volumes` in the `pd-group` and `tikv-group` charts to match the expected workload and storage requirements.
 
@@ -31,7 +32,32 @@ After applying Terraform, get the generated Google service account email:
 terraform output monitoring_service_account_email
 ```
 
-Replace the `<PROJECT_ID>` placeholder in `values.cluster.yaml` with the matching email before installing the cluster chart. Managed collection still requires the `PodMonitoring` CRD supplied by GKE Managed Service for Prometheus.
+Replace the `<PROJECT_ID>` placeholder in `values.cluster.yaml` with the matching email before installing the cluster chart. Managed collection still requires the `PodMonitoring` and `Rules` CRDs supplied by GKE Managed Service for Prometheus.
+
+Set `surrealdb_service_account_email` in `main.tf` to the Google service account annotated on the SurrealDB pods. Terraform grants that account access to the two metrics secrets for the GKE Secret Manager CSI driver.
+
+The cluster chart can install the SurrealDB, PD, TiKV, [node exporter](https://github.com/prometheus/node_exporter), and [blackbox exporter](https://github.com/prometheus/blackbox_exporter). PD and TiKV rules are enabled by default when rules are enabled; node exporter and blackbox rules are disabled by default because they require those exporters and targets. SurrealDB rules are enabled in this example and use the metric families described in the [SurrealDB metrics reference](https://surrealdb.com/docs/manage/observability/metrics.md). Set `monitoring.rules.enabled: false` to install managed collection without alert rules.
+
+SurrealDB's full metrics surface requires authenticated viewer-scoped root credentials. Create a separate metrics user after the initial deployment, then add its password as a Google Secret Manager secret version. The username is configured directly in `values.cluster.yaml`. Terraform creates the password secret container and grants the SurrealDB workload service account access; it does not store the password:
+
+```sql
+DEFINE USER metrics ON ROOT PASSWORD '<METRICS_PASSWORD>' ROLES VIEWER;
+```
+
+```bash
+printf '<METRICS_PASSWORD>' | gcloud secrets versions add surrealdb-metrics-password \
+  --data-file=- --project <PROJECT_ID>
+```
+
+The cluster chart renders a `SecretProviderClass` using the GKE Secret Manager CSI driver. The production SurrealDB values mount that provider, which materializes the namespace-local Secret required by `PodMonitoring`. The chart then scrapes `/metrics` over HTTPS (when TLS is enabled) with the `surrealdb-metrics` credentials. Install the SurrealDB release with `SURREAL_METRICS_ENABLED=true`, then verify collection and rules:
+
+```bash
+k get podmonitoring,rules -n surreal-cluster
+k describe podmonitoring surrealdb -n surreal-cluster
+k get secret surrealdb-metrics -n surreal-cluster
+```
+
+The metrics user password must not be committed to values files, Terraform state, or shell scripts. The complete alert set includes process, HTTP, query, transaction, and distributed-cluster signals.
 
 ### Enable scaling
 
