@@ -88,7 +88,34 @@ horizontalPodAutoscaler:
 
 nodeSelector: {}
 tolerations: []
-affinity: {}
+
+# The following is recommended affinity configuration for better pod distribution and high availability.
+# Feel free to adjust the affinity rules based on your cluster topology and requirements.
+affinity:
+  podAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 50
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - tidb-cluster
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                  - pd
+                  - tikv
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: topology.kubernetes.io/zone
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: surrealdb
+            app.kubernetes.io/instance: surrealdb
+
 volumes:
   - name: kvs-tls
     secret:
