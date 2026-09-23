@@ -62,3 +62,18 @@ module "gke-surrealdb" {
     google = google
   }
 }
+
+output "encryption_at_rest_key_ids" {
+  value       = module.gke-surrealdb.encryption_at_rest_key_ids
+  description = "Google Cloud KMS key resource IDs keyed by GKE cluster name"
+}
+
+output "encryption_at_rest_service_account_emails" {
+  value       = module.gke-surrealdb.encryption_at_rest_service_account_emails
+  description = "Google service account emails used for PD and TiKV encryption at rest, keyed by GKE cluster name"
+}
+
+output "monitoring_service_account_email" {
+  value       = module.gke-surrealdb.monitoring_service_account_email
+  description = "Shared Google service account email used for Prometheus monitoring across all clusters"
+}
