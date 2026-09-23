@@ -2,7 +2,8 @@
 
 A basic one-replica setup on GKE Autopilot served on a HTTPS endpoint. The basic method is the fastest and cheapest way to get SurrealDB running with a TiKV backend. Cost for this setup is $74.40/month for cluster management fee (free with usage credits) + $80/month resource request (approximate).
 
-Important note: this setup is meant to be cheap with minimal resources and is not meant to be run in production. To run in production, see the [Autopilot Production example](../prod-auto).
+> [!IMPORTANT]
+> This setup is meant to be cheap with minimal resources and is not meant to be run in production. To run in production, see the [Autopilot Production example](../prod-auto).
 
 To ensure this example works without error, ensure you have the Project Owner IAM permission.
 
@@ -257,7 +258,7 @@ The values mount the `sdb-kvs-secret` certificate and set the `SURREAL_TIKV_TLS_
 
 ## Change Default Admin
 
-It is recommended to change the root user of the deployment.
+Choose one of the following methods to change the initial root user of your deployment:
 
 ### DNS Endpoint
 
@@ -279,7 +280,7 @@ REMOVE USER root ON ROOT;
 
 ### Jump Host
 
-1. Exit the previously-opened jump host connection.
+1. Setup a [jump host](../../README.md#jump-host) in the region. Exit any previously-opened jump host connection.
 
 2. Open a connection to the frontend to connect to the admin portal in the VPC. Note these flags are different because routes are dynamic instead of targeting the localhost.
 ```bash
@@ -288,7 +289,7 @@ gcloud compute ssh $INSTANCE \
     --ssh-flag="-ND 8888"
 ```
 
-3. In another terminal, run the following to open a browser in the VPC network then visit surrealist.app to perform admin tasks. Feel free to modify the application with your computer’s application. If you followed the instructions, the root authentication is ‘root’ for both the username and password. The url domain is the https://DNS_NAME.
+3. In another terminal, run the following to open a browser in the VPC network then visit `surrealist.app` to perform admin tasks. Feel free to modify the application with your computer’s application. If you followed the instructions, the root authentication is 'root' for both the username and password. The url domain is the 'https://$DNS_NAME'.
 
 ```bash
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \

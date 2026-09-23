@@ -37,9 +37,9 @@ Replace the `<PROJECT_ID>` placeholder in `values.cluster.yaml` with the matchin
 
 Terraform enables GKE Secret Sync for the cluster so the metrics credential can be synchronized from Google Secret Manager.
 
-The cluster chart can install the SurrealDB, PD, TiKV, [node exporter](https://github.com/prometheus/node_exporter), and [blackbox exporter](https://github.com/prometheus/blackbox_exporter). PD and TiKV rules are enabled by default when rules are enabled; node exporter and blackbox rules are disabled by default because they require those exporters and targets. SurrealDB rules are enabled in this example and use the metric families described in the [SurrealDB metrics reference](https://surrealdb.com/docs/manage/observability/metrics.md). Set `monitoring.rules.enabled: false` to install managed collection without alert rules.
+The cluster chart installs SurrealDB, PD, and TiKV rules by default. Additionally, [node exporter](https://github.com/prometheus/node_exporter), and [blackbox exporter](https://github.com/prometheus/blackbox_exporter) rules can be enabled but these require additional exporters and targets. SurrealDB rules are enabled in this example and use the metric families described in the [SurrealDB metrics reference](https://surrealdb.com/docs/manage/observability/metrics.md).
 
-SurrealDB's full metrics surface requires authenticated viewer-scoped root credentials. Create a separate metrics user after the initial deployment, then add its password as a Google Secret Manager secret version. The username is configured directly in `values.cluster.yaml`. Terraform creates the password secret container and grants the SurrealDB workload service account access; it does not store the password:
+SurrealDB's full metrics surface requires authenticated viewer-scoped root credentials. Create a separate metrics user after the initial deployment, then add its password as a Google Secret Manager secret version. The username is configured directly in `values.cluster.yaml` while the password is mounted as a kubernetes secret with workload permissions.
 
 ```sql
 DEFINE USER metrics ON ROOT PASSWORD '<METRICS_PASSWORD>' ROLES VIEWER;
@@ -50,15 +50,13 @@ printf '<METRICS_PASSWORD>' | gcloud secrets versions add surrealdb-metrics-pass
   --data-file=- --project <PROJECT_ID>
 ```
 
-The cluster chart renders a `SecretSync` using GKE Secret Sync. The password source is Google Secret Manager; Secret Sync makes it available to the monitoring configuration as the `surrealdb-metrics` Kubernetes Secret without mounting anything into the SurrealDB pod. The chart then scrapes `/metrics` over HTTPS (when TLS is enabled) with the `surrealdb-metrics` credentials. Install the SurrealDB release with `SURREAL_METRICS_ENABLED=true`, then verify collection and rules:
+Verify the collection and rules:
 
 ```bash
 k get podmonitoring,rules -n surreal-cluster
 k describe podmonitoring surrealdb -n surreal-cluster
 k get secretsync surrealdb-metrics -n surreal-cluster
 ```
-
-The metrics user password must not be committed to values files, Terraform state, or shell scripts. The complete alert set includes process, HTTP, query, transaction, and distributed-cluster signals.
 
 ### Verify metrics
 
