@@ -14,8 +14,6 @@ monitoring:
     surrealdb: true
   surrealdb:
     enabled: true
-    port: http
-    path: /metrics
     credentials:
       name: surrealdb-metrics
       username: metrics

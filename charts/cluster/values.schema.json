@@ -19,6 +19,27 @@
       "type": "object",
       "properties": {
         "interval": { "type": "string" },
+        "managedPrometheus": {
+          "type": "object",
+          "properties": {
+            "secretAccess": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" }
+              },
+              "required": ["enabled"],
+              "additionalProperties": false
+            },
+            "collectorServiceAccount": { "type": "string" },
+            "collectorNamespaces": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            }
+          },
+          "required": ["secretAccess", "collectorServiceAccount", "collectorNamespaces"],
+          "additionalProperties": false
+        },
         "rules": {
           "type": "object",
           "properties": {
@@ -35,8 +56,6 @@
           "type": "object",
           "properties": {
             "enabled": { "type": "boolean" },
-            "port": { "type": "string" },
-            "path": { "type": "string" },
             "credentials": {
               "type": "object",
               "properties": {
@@ -58,7 +77,7 @@
               "additionalProperties": false
             }
           },
-          "required": ["enabled", "port", "path", "credentials"],
+          "required": ["enabled", "credentials"],
           "additionalProperties": false
         }
       },

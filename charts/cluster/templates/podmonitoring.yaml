@@ -2,18 +2,54 @@
 apiVersion: monitoring.googleapis.com/v1
 kind: PodMonitoring
 metadata:
-  name: sdb-datastore
+  name: sdb-datastore-pd
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/managed-by: tidb-operator
       pingcap.com/cluster: sdb-datastore
+      pingcap.com/component: pd
   endpoints:
-    - port: metrics
+    - port: client
       interval: {{ .Values.monitoring.interval | default "15s" }}
       {{- if .Values.tls.enabled }}
       scheme: https
       tls:
+        serverName: pd-pd
+        ca:
+          secret:
+            name: sdb-datastore-cluster-client-secret
+            key: ca.crt
+        cert:
+          secret:
+            name: sdb-datastore-cluster-client-secret
+            key: tls.crt
+        key:
+          secret:
+            name: sdb-datastore-cluster-client-secret
+            key: tls.key
+      {{- else }}
+      scheme: http
+      {{- end }}
+---
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: sdb-datastore-tikv
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: tidb-operator
+      pingcap.com/cluster: sdb-datastore
+      pingcap.com/component: tikv
+  endpoints:
+    - port: status
+      path: /metrics
+      interval: {{ .Values.monitoring.interval | default "15s" }}
+      {{- if .Values.tls.enabled }}
+      scheme: https
+      tls:
+        serverName: tikv-tikv
         ca:
           secret:
             name: sdb-datastore-cluster-client-secret
@@ -42,12 +78,19 @@ spec:
     secrets: |
       - resourceName: "projects/{{ .Values.monitoring.surrealdb.secretManager.projectId }}/secrets/{{ .Values.monitoring.surrealdb.secretManager.passwordSecret }}/versions/{{ .Values.monitoring.surrealdb.secretManager.version }}"
         path: "password"
-  secretObjects:
-    - secretName: {{ .Values.monitoring.surrealdb.credentials.name }}
-      type: Opaque
-      data:
-        - objectName: password
-          key: password
+---
+apiVersion: secret-sync.gke.io/v1
+kind: SecretSync
+metadata:
+  name: surrealdb-metrics
+spec:
+  serviceAccountName: {{ .Values.monitoring.serviceAccount.name }}
+  secretProviderClassName: surrealdb-metrics
+  secretObject:
+    type: Opaque
+    data:
+      - sourcePath: password
+        targetKey: password
 {{- end }}
 ---
 apiVersion: monitoring.googleapis.com/v1
@@ -57,10 +100,11 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: surrealdb
+      app.kubernetes.io/instance: surrealdb
+      app.kubernetes.io/name: surrealdb
   endpoints:
-    - port: {{ .Values.monitoring.surrealdb.port }}
-      path: {{ .Values.monitoring.surrealdb.path }}
+    - port: http
+      path: /metrics
       interval: {{ .Values.monitoring.interval | default "15s" }}
       basicAuth:
         username: {{ .Values.monitoring.surrealdb.credentials.username }}
@@ -71,6 +115,7 @@ spec:
       {{- if .Values.tls.enabled }}
       scheme: https
       tls:
+        serverName: surrealdb
         ca:
           secret:
             name: sdb-web-secret

@@ -35,7 +35,7 @@ terraform output monitoring_service_account_email
 
 Replace the `<PROJECT_ID>` placeholder in `values.cluster.yaml` with the matching email before installing the cluster chart. Managed collection still requires the `PodMonitoring` and `Rules` CRDs supplied by GKE Managed Service for Prometheus.
 
-Terraform grants the monitoring Google service account access to the metrics secrets for the GKE Secret Manager CSI driver.
+Terraform enables GKE Secret Sync for the cluster so the metrics credential can be synchronized from Google Secret Manager.
 
 The cluster chart can install the SurrealDB, PD, TiKV, [node exporter](https://github.com/prometheus/node_exporter), and [blackbox exporter](https://github.com/prometheus/blackbox_exporter). PD and TiKV rules are enabled by default when rules are enabled; node exporter and blackbox rules are disabled by default because they require those exporters and targets. SurrealDB rules are enabled in this example and use the metric families described in the [SurrealDB metrics reference](https://surrealdb.com/docs/manage/observability/metrics.md). Set `monitoring.rules.enabled: false` to install managed collection without alert rules.
 
@@ -50,15 +50,99 @@ printf '<METRICS_PASSWORD>' | gcloud secrets versions add surrealdb-metrics-pass
   --data-file=- --project <PROJECT_ID>
 ```
 
-The cluster chart renders a `SecretProviderClass` using the GKE Secret Manager CSI driver. The production SurrealDB values mount that provider, which materializes the namespace-local Secret required by `PodMonitoring`. The chart then scrapes `/metrics` over HTTPS (when TLS is enabled) with the `surrealdb-metrics` credentials. Install the SurrealDB release with `SURREAL_METRICS_ENABLED=true`, then verify collection and rules:
+The cluster chart renders a `SecretSync` using GKE Secret Sync. The password source is Google Secret Manager; Secret Sync makes it available to the monitoring configuration as the `surrealdb-metrics` Kubernetes Secret without mounting anything into the SurrealDB pod. The chart then scrapes `/metrics` over HTTPS (when TLS is enabled) with the `surrealdb-metrics` credentials. Install the SurrealDB release with `SURREAL_METRICS_ENABLED=true`, then verify collection and rules:
 
 ```bash
 k get podmonitoring,rules -n surreal-cluster
 k describe podmonitoring surrealdb -n surreal-cluster
-k get secret surrealdb-metrics -n surreal-cluster
+k get secretsync surrealdb-metrics -n surreal-cluster
 ```
 
 The metrics user password must not be committed to values files, Terraform state, or shell scripts. The complete alert set includes process, HTTP, query, transaction, and distributed-cluster signals.
+
+### Verify metrics
+
+Use the following trace to verify the raw metrics endpoints and managed collection. These commands assume the namespace is `surreal-cluster`:
+
+```bash
+# export NS=surreal-cluster
+kubectl get podmonitoring,rules -n "$NS"
+kubectl describe podmonitoring sdb-datastore-pd -n "$NS"
+kubectl describe podmonitoring sdb-datastore-tikv -n "$NS"
+kubectl describe podmonitoring surrealdb -n "$NS"
+kubectl get secretsync surrealdb-metrics -n "$NS"
+```
+
+#### PD metrics
+
+PD and TiKV require mutual TLS, so query their endpoints from inside the workload pods using the mounted client certificates.
+
+```bash
+PD_POD=$(kubectl get pod -n "$NS" \
+  -l 'pingcap.com/component=pd' \
+  -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -n "$NS" "$PD_POD" -- sh -c \
+  'curl -sS --cacert /var/lib/pd-tls/ca.crt \
+    --cert /var/lib/pd-tls/tls.crt \
+    --key /var/lib/pd-tls/tls.key \
+    https://127.0.0.1:2379/metrics' \
+  | grep -E '^(pd_regions_status|pd_cluster_metadata|pd_tso_events|etcd_server_is_leader)' \
+  | head -20
+```
+
+#### TiKV metrics
+
+```bash
+TIKV_POD=$(kubectl get pod -n "$NS" \
+  -l 'pingcap.com/component=tikv' \
+  -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -n "$NS" "$TIKV_POD" -- sh -c \
+  'curl -sS --cacert /var/lib/tikv-tls/ca.crt \
+    --cert /var/lib/tikv-tls/tls.crt \
+    --key /var/lib/tikv-tls/tls.key \
+    https://127.0.0.1:20180/metrics' \
+  | grep -E '^(tikv_|process_|go_)' \
+  | head -30
+```
+
+#### SurrealDB metrics
+
+To test the endpoint from inside the cluster, use the TiDB Operator pod which includes `curl`, with `-k` for a certificate:
+
+```bash
+OPERATOR_NS=tidb-admin
+OPERATOR_POD=$(kubectl get pod -n "$OPERATOR_NS" \
+  -l app.kubernetes.io/name=tidb-operator \
+  -o jsonpath='{.items[0].metadata.name}')
+METRICS_PASSWORD=$(gcloud secrets versions access latest \
+  --secret=surrealdb-metrics-password)
+kubectl exec -n "$OPERATOR_NS" "$OPERATOR_POD" -- \
+  env METRICS_PASSWORD="$METRICS_PASSWORD" sh -c \
+  'curl -sS -k -u "metrics:${METRICS_PASSWORD}" \
+    -w "\\nHTTP_STATUS:%{http_code}\\n" \
+    https://surrealdb.surreal-cluster.svc:443/metrics' \
+  | grep -E '^(surrealdb_build_info|surrealdb_process_uptime_seconds|surrealdb_process_memory_bytes|surrealdb_process_cpu_percent|target_info|HTTP_STATUS:)'
+```
+
+The expected result is `HTTP_STATUS:200` and metrics including `surrealdb_build_info`. The in-cluster service address is `https://surrealdb.surreal-cluster.svc:443/metrics`.
+
+#### Cloud Monitoring Metrics Explorer
+
+PD v8.5.8 does not emit the older `pd_cluster_status` family. Verify managed collection with metric families that this version exposes:
+
+```promql
+pd_regions_status
+pd_cluster_metadata
+etcd_server_is_leader
+tikv_engine_size_bytes
+surrealdb_build_info
+```
+
+For a target summary, use:
+
+```promql
+count by (job) (up)
+```
 
 ### Enable scaling
 

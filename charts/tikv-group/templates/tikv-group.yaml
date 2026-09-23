@@ -25,7 +25,7 @@ spec:
       config: |
       {{- if .Values.tls.enabled }}
         [security]
-          cert-allowed-cn = ["cluster", "pd", "tikv"]
+          cert-allowed-cn = ["surrealdb", "cluster", "pd", "tikv"]
       {{- end }}
       {{- if .Values.encryption.enabled }}
         [security.encryption]

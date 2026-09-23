@@ -139,7 +139,7 @@ k apply -f https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tid
 k apply -f https://github.com/pingcap/tidb-operator/releases/download/v2.0.0/tidb-operator.yaml --server-side
 ```
 
-3. Verify that the Pods are running (tip: add the `--watch` command to wait for changes.)
+3. Verify that the Pods are running (tip: add the `-w (--watch)` command to wait for changes.)
 ```bash
 k get pods -n tidb-admin
 ```

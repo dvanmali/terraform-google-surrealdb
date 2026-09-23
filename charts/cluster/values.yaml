@@ -9,6 +9,13 @@ serviceAccount:
 enable_prometheus: disabled
 monitoring:
   interval: 15s
+  managedPrometheus:
+    secretAccess:
+      enabled: true
+    collectorServiceAccount: collector
+    collectorNamespaces:
+      - gke-gmp-system
+      - gmp-system
   rules:
     enabled: false
     pd: true
@@ -18,8 +25,6 @@ monitoring:
     surrealdb: false
   surrealdb:
     enabled: false
-    port: http
-    path: /metrics
     credentials:
       name: surrealdb-metrics
       username: metrics

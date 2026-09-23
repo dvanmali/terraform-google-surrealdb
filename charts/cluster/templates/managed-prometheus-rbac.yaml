@@ -1,0 +1,29 @@
+{{- if and (eq .Values.enable_prometheus "managed") .Values.monitoring.managedPrometheus.secretAccess.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: managed-prometheus-secret-reader
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+    resourceNames:
+      - sdb-datastore-cluster-client-secret
+      - sdb-web-secret
+      - surrealdb-metrics
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gmp-system:collector:managed-prometheus-secret-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: managed-prometheus-secret-reader
+subjects:
+{{- range .Values.monitoring.managedPrometheus.collectorNamespaces }}
+  - kind: ServiceAccount
+    name: {{ $.Values.monitoring.managedPrometheus.collectorServiceAccount }}
+    namespace: {{ . }}
+{{- end }}
+{{- end }}
