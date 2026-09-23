@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [2.0.0-beta.1] - 2026-09-23
 
 ### Breaking Changes
 
@@ -97,6 +97,7 @@ All notable changes to this project are documented here.
 - Added documentation for DNS, VPC, IAM, TiDB, and SurrealDB setup.
 
 [Unreleased]: https://github.com/dvanmali/terraform-google-surrealdb/compare/v1.2.3...HEAD
+[2.0.0-beta.1]: https://github.com/dvanmali/terraform-google-surrealdb/releases/tag/2.0.0-beta.1
 [1.2.3]: https://github.com/dvanmali/terraform-google-surrealdb/releases/tag/v1.2.3
 [1.2.2]: https://github.com/dvanmali/terraform-google-surrealdb/releases/tag/v1.2.2
 [1.2.1]: https://github.com/dvanmali/terraform-google-surrealdb/releases/tag/v1.2.1
