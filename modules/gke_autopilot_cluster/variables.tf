@@ -94,7 +94,7 @@ variable "jump_host_zone" {
 variable "proxy_subnet_ip_cidr" {
   type        = string
   description = "/23 CIDR Proxy Only Subnet"
-  default     = "10.100.0.0/23" # 512 IP Addresses (Reserves 10.100.0.0-10.100.1.256)
+  default     = "10.100.0.0/23" # 512 IP Addresses (Reserves 10.100.0.0-10.100.1.356)
 }
 
 variable "master_ipv4_cidr_block" {
