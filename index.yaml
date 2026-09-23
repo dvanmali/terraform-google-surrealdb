@@ -1,0 +1,34 @@
+apiVersion: v1
+entries:
+  cluster:
+    - apiVersion: v2
+      appVersion: ""
+      created: "2026-09-23T00:00:00Z"
+      description: TiDB cluster resources with optional Prometheus monitoring and alert rules
+      digest: daa9db8bbc80170d725e4cc4aa6a1efdfc57abd80369fd47db9ef58cea0ce4a8
+      name: cluster
+      type: application
+      urls:
+        - cluster-0.1.3.tgz
+      version: 0.1.3
+  pd-group:
+    - apiVersion: v2
+      appVersion: ""
+      created: "2026-09-23T00:00:00Z"
+      digest: 5fd5809f524f8cdb84de2c085e29ac8c06990f804f6d4e858d91b0cf7fcc3be3
+      name: pd-group
+      type: application
+      urls:
+        - pd-group-0.1.3.tgz
+      version: 0.1.3
+  tikv-group:
+    - apiVersion: v2
+      appVersion: ""
+      created: "2026-09-23T00:00:00Z"
+      digest: a1fc42c0368068b67354fe9044c40c8c05da482f2d9f8e36f3d33f32f216ae5d
+      name: tikv-group
+      type: application
+      urls:
+        - tikv-group-0.1.3.tgz
+      version: 0.1.3
+generated: "2026-09-23T00:00:00Z"
