@@ -115,6 +115,10 @@ resource "google_container_cluster" "surreal" {
     enabled = true
   }
 
+  secret_sync_config {
+    enabled = true
+  }
+
   master_authorized_networks_config {}
 
   maintenance_policy {
