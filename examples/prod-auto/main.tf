@@ -2,8 +2,8 @@ locals {
   project_id = "<PROJECT_ID>"
   vpc        = "<VPC_NAME>"
 
-  enable_external_global_lb         = false
-  enable_internal_cross_regional_lb = true
+  enable_external_global_lb         = true
+  enable_internal_cross_regional_lb = false
 
   # NOTE: All CIDR ranges can be changed, they are only provided as Quickstart
   gke_clusters = {
