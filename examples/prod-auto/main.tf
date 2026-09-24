@@ -48,7 +48,7 @@ provider "google" {
 
 module "gke-surrealdb" {
   source  = "dvanmali/surrealdb/google"
-  version = "2.0.0-beta.1"
+  version = "2.0.0-beta.2"
 
   project_id    = local.project_id
   vpc           = local.vpc
