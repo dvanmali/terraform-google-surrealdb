@@ -78,19 +78,24 @@ Create the two annotated Kubernetes service accounts (apply to every cluster):
 ```bash
 # export REGION= location of the cluster
 CLUSTER_NAME="$REGION-1"
-KEY_NAME="${CLUSTER_NAME//-/_}"
-KMS_KEY_ID=$(terraform output -json --state terraform.tfstate encryption_at_rest_key_ids | jq -r --arg cluster "$KEY_NAME" '.[$cluster]')
-PD_GCP_SERVICE_ACCOUNT=$(terraform output -json --state terraform.tfstate encryption_at_rest_service_account_emails | jq -r --arg cluster "$KEY_NAME" '.[$cluster].pd')
-TIKV_GCP_SERVICE_ACCOUNT=$(terraform output -json --state terraform.tfstate encryption_at_rest_service_account_emails | jq -r --arg cluster "$KEY_NAME" '.[$cluster].tikv')
+NS="surreal-cluster"
+KMS_KEY_ID=$(terraform output -json --state terraform.tfstate encryption_at_rest_key_ids |
+  jq -er --arg cluster "$CLUSTER_NAME" '.[$cluster]')
+PD_GCP_SERVICE_ACCOUNT=$(terraform output -json --state terraform.tfstate encryption_at_rest_service_account_emails |
+  jq -er --arg cluster "$CLUSTER_NAME" '.[$cluster].pd')
+TIKV_GCP_SERVICE_ACCOUNT=$(terraform output -json --state terraform.tfstate encryption_at_rest_service_account_emails |
+  jq -er --arg cluster "$CLUSTER_NAME" '.[$cluster].tikv')
 PD_SERVICE_ACCOUNT="gke-pd-${CLUSTER_NAME}"
 TIKV_SERVICE_ACCOUNT="gke-tikv-${CLUSTER_NAME}"
 
-k create namespace surreal-cluster --dry-run=client -o yaml | k apply -f -
-k create serviceaccount "$PD_SERVICE_ACCOUNT" -n surreal-cluster --dry-run=client -o yaml | k apply -f -
-k create serviceaccount "$TIKV_SERVICE_ACCOUNT" -n surreal-cluster --dry-run=client -o yaml | k apply -f -
-k annotate serviceaccount "$PD_SERVICE_ACCOUNT" -n surreal-cluster \
+k create namespace "$NS" --dry-run=client -o yaml | k apply -f -
+k create serviceaccount "$PD_SERVICE_ACCOUNT" -n "$NS" \
+  --dry-run=client -o yaml | k apply -f -
+k create serviceaccount "$TIKV_SERVICE_ACCOUNT" -n "$NS" \
+  --dry-run=client -o yaml | k apply -f -
+k annotate serviceaccount "$PD_SERVICE_ACCOUNT" -n "$NS" \
   "iam.gke.io/gcp-service-account=$PD_GCP_SERVICE_ACCOUNT" --overwrite
-k annotate serviceaccount "$TIKV_SERVICE_ACCOUNT" -n surreal-cluster \
+k annotate serviceaccount "$TIKV_SERVICE_ACCOUNT" -n "$NS" \
   "iam.gke.io/gcp-service-account=$TIKV_GCP_SERVICE_ACCOUNT" --overwrite
 ```
 
@@ -156,20 +161,19 @@ Now that we have the TiDB Operator running, it's time to define a TiKV Cluster a
 1. Add the published Helm chart repository and install the cluster chart. Remeber to replace \<PROJECT_ID\> in your `values.cluster.yaml`.
 <!--
 ```bash
-h upgrade --install -f ./values.cluster.local.yaml cluster ../../charts/cluster -n surreal-cluster --create-namespace
+h upgrade --install -f ./values.cluster.local.yaml cluster ../../charts/cluster -n $NS
 ```
 -->
 ```bash
 h repo add sdb-datastore https://dvanmali.github.io/terraform-google-surrealdb
 h repo update
-h upgrade --install -f ./values.cluster.yaml cluster sdb-datastore/cluster \
-  -n surreal-cluster --create-namespace
+h upgrade --install -f ./values.cluster.yaml cluster sdb-datastore/cluster -n $NS
 ```
 
 The cluster chart enables mutual TLS by default and creates the CA, cluster client, and PD/TiKV certificates. Disable it with `--set tls.enabled=false` on the cluster, PD, and TiKV chart installs. When enabled, wait for the certificates to become ready before installing the component groups:
 
 ```bash
-k get certificates -n surreal-cluster
+k get certificates -n $NS
 ```
 ```text
 NAME                READY   SECRET                     AGE
@@ -183,13 +187,13 @@ tikv-tikv-cluster   True    tikv-tikv-cluster-secret   10s
 2. Install the PD group chart. Remember to replace the \<REGION\> in your `values.pd.yaml`.
 <!--
 ```bash
-h upgrade --install -f ./values.pd.local.yaml pd-group ../../charts/pd-group -n surreal-cluster
+h upgrade --install -f ./values.pd.local.yaml pd-group ../../charts/pd-group -n $NS
 ```
 -->
 ```bash
-h upgrade --install -f ./values.pd.yaml pd-group sdb-datastore/pd-group -n surreal-cluster \
+h upgrade --install -f ./values.pd.yaml pd-group sdb-datastore/pd-group -n $NS \
   --set-string serviceAccountName="$PD_SERVICE_ACCOUNT"
-k get pdgroup -n surreal-cluster
+k get pdgroup -n $NS
 ```
 ```text
 NAME   CLUSTER         DESIRED   READY   UPDATED   UPDATEREVISION     CURRENTREVISION    SYNCED   READY   AGE
@@ -199,7 +203,7 @@ pd     sdb-datastore   1         1       1         pd-pd-xxx          pd-pd-xxx 
 3. Install the TiKV group chart. Remember to replace the \<REGION\> in your `values.tikv.yaml`.
 <!--
 ```bash
-h upgrade --install -f ./values.tikv.local.yaml tikv-group ../../charts/tikv-group -n surreal-cluster \
+h upgrade --install -f ./values.tikv.local.yaml tikv-group ../../charts/tikv-group -n $NS \
   --set encryption.enabled=true \
   --set-string serviceAccountName="$TIKV_SERVICE_ACCOUNT" \
   --set-string encryption.kms.keyID="$KMS_KEY_ID" \
@@ -207,12 +211,12 @@ h upgrade --install -f ./values.tikv.local.yaml tikv-group ../../charts/tikv-gro
 ```
 -->
 ```bash
-h upgrade --install -f ./values.tikv.yaml tikv-group sdb-datastore/tikv-group -n surreal-cluster \
+h upgrade --install -f ./values.tikv.yaml tikv-group sdb-datastore/tikv-group -n $NS \
   --set encryption.enabled=true \
   --set-string serviceAccountName="$TIKV_SERVICE_ACCOUNT" \
   --set-string encryption.kms.keyID="$KMS_KEY_ID" \
   --set-string encryption.kms.region="$REGION"
-k get tikvgroup -n surreal-cluster
+k get tikvgroup -n $NS
 ```
 ```text
 NAME   CLUSTER         DESIRED   READY   UPDATED   UPDATEREVISION     CURRENTREVISION    SYNCED   READY   AGE
@@ -221,7 +225,7 @@ tikv   sdb-datastore   1         1       1         tikv-tikv-xxx      tikv-tikv-
 
 4. Check the cluster status and wait until it's ready (all ready and running).
 ```bash
-k get pods -n surreal-cluster
+k get pods -n $NS
 ```
 ```text
 NAME              READY     STATUS    RESTARTS   AGE
@@ -242,12 +246,12 @@ cp ./values.surrealdb.yaml values.surrealdb.local.yaml
 ```bash
 h repo add surrealdb https://helm.surrealdb.com
 h repo update
-h upgrade --install -f values.surrealdb.local.yaml surrealdb surrealdb/surrealdb -n surreal-cluster
+h upgrade --install -f values.surrealdb.local.yaml surrealdb surrealdb/surrealdb -n $NS
 ```
 
 3. Check the deployment status to check everything is ready.
 ```bash
-k get deployment -n surreal-cluster
+k get deployment -n $NS
 ```
 ```text
 NAME        READY   UP-TO-DATE   AVAILABLE   AGE
@@ -304,10 +308,10 @@ gcloud compute ssh $INSTANCE \
 Clean up of the Kubernetes environment can be quickly performed via helm.
 
 ```bash
-h uninstall surrealdb -n surreal-cluster
-h uninstall cluster -n surreal-cluster
-h uninstall pd-group -n surreal-cluster
-h uninstall tikv-group -n surreal-cluster
+h uninstall surrealdb -n $NS
+h uninstall cluster -n $NS
+h uninstall pd-group -n $NS
+h uninstall tikv-group -n $NS
 k delete deployment tidb-operator -n tidb-admin
 h uninstall cert-manager -n cert-manager
 ```
